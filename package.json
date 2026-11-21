@@ -1,0 +1,13 @@
+{
+  "name": "zecheng-li-blog",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "preview": "python3 -m http.server 8787 --bind 127.0.0.1 --directory dist",
+    "deploy": "SITE_URL=http://8.138.106.58 node build.mjs && tar -czf /tmp/zecheng-blog-dist.tar.gz -C dist . && scp /tmp/zecheng-blog-dist.tar.gz root@8.138.106.58:/tmp/ && ssh root@8.138.106.58 'rm -rf /var/www/zecheng-blog/* /usr/share/nginx/html/* && tar -xzf /tmp/zecheng-blog-dist.tar.gz -C /var/www/zecheng-blog/ && tar -xzf /tmp/zecheng-blog-dist.tar.gz -C /usr/share/nginx/html/ && chmod -R a+rX /var/www/zecheng-blog /usr/share/nginx/html && systemctl reload nginx'"
+  },
+  "dependencies": {
+    "markdown-it": "15.0.3"
+  }
+}
