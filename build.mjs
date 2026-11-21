@@ -36,14 +36,14 @@ const nav = [
 ];
 
 const reelChapters = [
-  { time: 0, code: '01', titleZh: '全球升温与核心发问', titleEn: 'The Warming Question', descZh: '地球正在加速变暖：谁面临最高风险？预警应在何时发出？', descEn: 'The planet is getting hotter. Who is most at risk — and when?' },
-  { time: 8, code: '02', titleZh: '跨学科身份定位', titleEn: 'Cross-Disciplinary Identity', descZh: '计算机科学科班 → 数据分析硕士 → 气候风险与早期预警学者', descEn: 'Computer scientist → Data analyst → Climate-risk researcher' },
-  { time: 15, code: '03', titleZh: '全球求学与科研轨迹', titleEn: 'Academic & Engineering Journey', descZh: '中国武汉 → 澳大利亚悉尼大学 (B.Sc. & M.IT) → 马来亚大学 (Ph.D.)', descEn: 'Wuhan → The University of Sydney (B.Sc. & M.IT) → Universiti Malaya (Ph.D.)' },
-  { time: 28, code: '04', titleZh: '热脆弱性归因 (Sci. Rep.)', titleEn: 'Heat Vulnerability (Sci. Rep. 2026)', descZh: '马来西亚 16 州区 · Random Forest + SHAP 多尺度驱动解析 (R² = 0.86)', descEn: '16 Malaysian States · Random Forest + SHAP attribution (R² = 0.86)' },
-  { time: 38, code: '05', titleZh: 'CMIP6 早期预警 (JEM)', titleEn: 'Early Warning (J. Environ. Manage. 2026)', descZh: '时间顺序留出 R² = 0.53 · 耦合 SSP1-2.6/5-8.5 与四级业务化警报仪表盘', descEn: 'Hold-out R² = 0.53 · CMIP6 trajectories & 4-tier operational alert scale' },
-  { time: 48, code: '06', titleZh: '学术发表全景矩阵', titleEn: '10 Peer-Reviewed Publications', descZh: '10 篇已发表/接收论文（含 npj Clim. Atmos. Sci. 代表作）与 4 篇在审研究', descEn: '10 published/accepted papers (incl. npj flagship) + 4 under review' },
-  { time: 58, code: '07', titleZh: 'IPCC AR7 评审与技术栈', titleEn: 'IPCC AR7 & Computational Toolkit', descZh: 'IPCC AR7 第四章专家评审 · ACTION 全球 Top 50 · 全栈计算工具球', descEn: 'IPCC AR7 Ch.4 Expert Reviewer · ACTION Top 50 · Full-stack toolkit' },
-  { time: 68, code: '08', titleZh: '全球研究版图与使命', titleEn: 'Global Footprint & Mission', descZh: '覆盖全球天然旱地、东南亚、巴西、美国与欧盟碳市场：将气候数据转化为保护人群的早期预警', descEn: 'Turning climate data into early warnings that protect people' },
+  { time: 0, label: '00:00', code: '01', titleZh: '全球升温与核心发问', titleEn: 'The Warming Question', descZh: '地球正在加速变暖：谁面临最高风险？预警应在何时发出？', descEn: 'The planet is getting hotter. Who is most at risk — and when?' },
+  { time: 7.5, label: '00:08', code: '02', titleZh: '跨学科身份定位', titleEn: 'Cross-Disciplinary Identity', descZh: '计算机科学科班 → 数据分析硕士 → 气候风险与早期预警学者', descEn: 'Computer scientist → Data analyst → Climate-risk researcher' },
+  { time: 15, label: '00:15', code: '03', titleZh: '全球求学与科研轨迹', titleEn: 'Academic & Engineering Journey', descZh: '中国武汉 → 澳大利亚悉尼大学 (B.Sc. & M.IT) → 马来亚大学 (Ph.D.)', descEn: 'Wuhan → The University of Sydney (B.Sc. & M.IT) → Universiti Malaya (Ph.D.)' },
+  { time: 27.5, label: '00:28', code: '04', titleZh: '热脆弱性归因 (Sci. Rep.)', titleEn: 'Heat Vulnerability (Sci. Rep. 2026)', descZh: '马来西亚 16 州区 · Random Forest + SHAP 多尺度驱动解析 (R² = 0.86)', descEn: '16 Malaysian States · Random Forest + SHAP attribution (R² = 0.86)' },
+  { time: 37.5, label: '00:38', code: '05', titleZh: 'CMIP6 早期预警 (JEM)', titleEn: 'Early Warning (J. Environ. Manage. 2026)', descZh: '时间顺序留出 R² = 0.53 · 耦合 SSP1-2.6/5-8.5 与四级业务化警报仪表盘', descEn: 'Hold-out R² = 0.53 · CMIP6 trajectories & 4-tier operational alert scale' },
+  { time: 47.5, label: '00:48', code: '06', titleZh: '学术发表全景矩阵', titleEn: '10 Peer-Reviewed Publications', descZh: '10 篇已发表/接收论文（含 npj Clim. Atmos. Sci. 代表作）与 4 篇在审研究', descEn: '10 published/accepted papers (incl. npj flagship) + 4 under review' },
+  { time: 57.5, label: '00:58', code: '07', titleZh: 'IPCC AR7 评审与技术栈', titleEn: 'IPCC AR7 & Computational Toolkit', descZh: 'IPCC AR7 第四章专家评审 · ACTION 全球 Top 50 · 全栈计算工具球', descEn: 'IPCC AR7 Ch.4 Expert Reviewer · ACTION Top 50 · Full-stack toolkit' },
+  { time: 67.5, label: '01:08', code: '08', titleZh: '全球研究版图与使命', titleEn: 'Global Footprint & Mission', descZh: '覆盖全球天然旱地、东南亚、巴西、美国与欧盟碳市场：将气候数据转化为保护人群的早期预警', descEn: 'Turning climate data into early warnings that protect people' },
 ];
 
 function renderReelSection({ english = false } = {}) {
@@ -51,23 +51,23 @@ function renderReelSection({ english = false } = {}) {
 <section class="home-section reel-section" id="research-reel" aria-labelledby="reel-heading">
   <div class="section-header">
     <div>
-      <span class="section-kicker">${english ? 'INTERACTIVE RESEARCH REEL · 80-SECOND VISUAL OVERVIEW' : 'INTERACTIVE RESEARCH REEL · 80 秒个人学术与代表作动态短片'}</span>
+      <span class="section-kicker">${english ? 'INTERACTIVE RESEARCH REEL · 80-SECOND VISUAL OVERVIEW' : 'INTERACTIVE RESEARCH REEL · 80 秒个人学术与代表作动态短片（国内/微信秒开零缓冲）'}</span>
       <h2 id="reel-heading">${english ? 'Research Reel: Turning Climate Data into Early Warnings' : '80 秒看懂我的跨学科轨迹与核心科研突破'}</h2>
     </div>
-    <a class="button button-outline" href="/assets/Zecheng_Li_Research_Reel.mp4" target="_blank" rel="noopener">${english ? 'Open Full HD MP4 ↗' : '新窗口打开高清原片 (MP4) ↗'}</a>
+    <div class="pub-actions" style="margin-top:0">
+      <a class="button button-outline" href="/assets/reel-player.html" target="_blank" rel="noopener">${english ? 'Fullscreen Interactive Player ↗' : '全屏交互播放 ↗'}</a>
+      <a class="button button-outline" href="/assets/Zecheng_Li_Research_Reel.mp4" target="_blank" rel="noopener">${english ? 'Download MP4 Video ↓' : '下载/打开 MP4 视频文件 ↓'}</a>
+    </div>
   </div>
 
   <div class="reel-theater">
     <div class="reel-player-col">
       <div class="reel-video-frame">
-        <video id="research-reel-video" controls preload="metadata" playsinline>
-          <source src="/assets/Zecheng_Li_Research_Reel.mp4" type="video/mp4">
-          ${english ? 'Your browser does not support HTML5 video.' : '您的浏览器不支持 HTML5 视频播放。'}
-        </video>
+        <iframe id="research-reel-iframe" src="/assets/reel-player.html" title="Zecheng Li Research Reel Interactive 1080p 60fps Player" allow="autoplay; fullscreen" loading="eager"></iframe>
       </div>
       <div class="reel-caption-bar">
-        <span class="badge badge-flagship">▶ 01:20 Motion Reel</span>
-        <p>${english ? 'Click any chapter on the right to jump directly to that timestamp in the video.' : '点击右侧任意章节卡片，视频将直接跳转到对应时间节点播放。'}</p>
+        <span class="badge badge-flagship">▶ 1080p 60fps 零缓冲矢量引擎 + 原生配乐</span>
+        <p>${english ? 'Click Play inside the frame or select any of the 8 chapters on the right to jump immediately.' : '采用 35KB 原生矢量渲染引擎 + AAC 配乐流，国内手机/微信/电脑均可 0.1 秒即点即播；点击右侧任意章节可瞬时跳转。'}</p>
       </div>
     </div>
 
@@ -79,8 +79,8 @@ function renderReelSection({ english = false } = {}) {
       <div class="reel-chapter-list">
         ${reelChapters
           .map(
-            (ch, idx) => `<button type="button" class="reel-chapter-btn${idx === 0 ? ' is-active' : ''}" data-seek-time="${ch.time}">
-              <span class="chapter-time">00:${String(ch.time).padStart(2, '0')}</span>
+            (ch, idx) => `<button type="button" class="reel-chapter-btn${idx === 1 ? ' is-active' : ''}" data-seek-time="${ch.time}">
+              <span class="chapter-time">${ch.label}</span>
               <div class="chapter-text">
                 <strong><em>${ch.code}</em> ${escape(english ? ch.titleEn : ch.titleZh)}</strong>
                 <span>${escape(english ? ch.descEn : ch.descZh)}</span>
