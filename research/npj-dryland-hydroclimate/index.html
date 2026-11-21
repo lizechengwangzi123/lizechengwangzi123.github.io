@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="月尺度卫星遥感为评估全球干旱区植被绿度与气候变化的关系提供了统一的时间标尺，但不同水文气候指标本身包含不同长度的历史累积信息。本研究基于 2001–2023 年（共 276 个月）0.5° 全球网格数据，在严格筛选自然植被覆盖度（≥85% 自然植被、≤5% 人为覆盖、干旱指数 0.05 ≤ AI &lt; 0.65）与观测质量后，对全球 7,332 个天然旱地格点的增强植被指数（MODIS EVI）季节异常进行系统分析（成功拟合 7,318 个格点，占全球陆地主导旱地网格的 39.0%）。通过严格滞后 PCMCI（1–6 个月前导）与包含当月的 PCMCI+（0–6 个月）条件独立性因果发现框架及全局 Benjamini–Hochberg FDR 校正（q ≤ 0.05），研究发现：当允许当月进入搜索时，6,125 条保留关联中有 69.6% 落在当月（lag 0）、26.5% 落在前一个月（lag 1），合计达 96.1%；在严格前导（lag 1–6）模型保留的 5,638 条关联中，83.3%（4,694 条）集中于前一个月（lag 1），且潜在蒸散发（PET）在 58.1% 的检出格点中获得最强统计支持（SPEI-6 占 27.6%，土壤水 SOIL 占 14.3%）。跨越 18 项严苛敏感性与稳健性实验表明：水文气候与植被的“耦合时间窗口（Selected Month）”一致性高达 92.2%–98.5%，远比“水分供给 vs. 大气蒸发需求主导类别（Indicator Role）”的分类更为稳健。">
+  <meta name="author" content="Zecheng Li (李泽城)">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="npj Climate and Atmospheric Science 代表作专题 | Zecheng Li 李泽城">
+  <meta property="og:description" content="月尺度卫星遥感为评估全球干旱区植被绿度与气候变化的关系提供了统一的时间标尺，但不同水文气候指标本身包含不同长度的历史累积信息。本研究基于 2001–2023 年（共 276 个月）0.5° 全球网格数据，在严格筛选自然植被覆盖度（≥85% 自然植被、≤5% 人为覆盖、干旱指数 0.05 ≤ AI &lt; 0.65）与观测质量后，对全球 7,332 个天然旱地格点的增强植被指数（MODIS EVI）季节异常进行系统分析（成功拟合 7,318 个格点，占全球陆地主导旱地网格的 39.0%）。通过严格滞后 PCMCI（1–6 个月前导）与包含当月的 PCMCI+（0–6 个月）条件独立性因果发现框架及全局 Benjamini–Hochberg FDR 校正（q ≤ 0.05），研究发现：当允许当月进入搜索时，6,125 条保留关联中有 69.6% 落在当月（lag 0）、26.5% 落在前一个月（lag 1），合计达 96.1%；在严格前导（lag 1–6）模型保留的 5,638 条关联中，83.3%（4,694 条）集中于前一个月（lag 1），且潜在蒸散发（PET）在 58.1% 的检出格点中获得最强统计支持（SPEI-6 占 27.6%，土壤水 SOIL 占 14.3%）。跨越 18 项严苛敏感性与稳健性实验表明：水文气候与植被的“耦合时间窗口（Selected Month）”一致性高达 92.2%–98.5%，远比“水分供给 vs. 大气蒸发需求主导类别（Indicator Role）”的分类更为稳健。">
+  <meta property="og:image" content="https://lizechengwangzi123.github.io/assets/npj-fig1-workflow.jpg">
+  <link rel="canonical" href="https://lizechengwangzi123.github.io/research/npj-dryland-hydroclimate/">
+  <meta property="og:url" content="https://lizechengwangzi123.github.io/research/npj-dryland-hydroclimate/">
+  
+  <title>npj Climate and Atmospheric Science 代表作专题 | Zecheng Li 李泽城</title>
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <script src="/assets/theme.js"></script>
+  <link rel="stylesheet" href="/assets/site.css">
+  <script defer src="/assets/site.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="/" aria-label="Zecheng Li 首页">
+        <span class="monogram" aria-hidden="true">ZL</span>
+        <span class="brand-text">
+          <strong lang="en">Zecheng Li <span class="brand-zh" lang="zh-CN">李泽城</span></strong>
+          <small>马来亚大学博士候选人 · 悉尼大学 CS & IT</small>
+        </span>
+      </a>
+      <nav class="nav" aria-label="主导航">
+        <a href="/">首页</a><a href="/#research-reel">研究短片</a><a href="/research/npj-dryland-hydroclimate/" aria-current="page">npj 代表作</a><a href="/research/">学术发表</a><a href="/notes/">科研博客</a><a href="/about/">简历与经历</a>
+      </nav>
+      <div class="header-controls">
+        <a class="cv-nav-btn" href="/assets/Zecheng_Li_Academic_CV.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9.5 15.5 2.5 2.5 2.5-2.5"/></svg><span>CV.pdf</span></a>
+        <a class="lang-link" href="/en/" lang="en" title="Switch to English Academic Profile">EN</a>
+        <button class="icon-button theme-toggle" type="button" aria-label="切换深色模式" aria-pressed="false" hidden>
+          <span class="theme-glyph" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="shell" tabindex="-1">
+<article class="flagship-monograph">
+  <div class="monograph-breadcrumb">
+    <a class="text-link" href="/research/">← 返回全部学术发表</a>
+    <span class="breadcrumb-sep">/</span>
+    <span>代表作深度专题 (Flagship Paper Monograph)</span>
+  </div>
+
+  <header class="monograph-header">
+    <div class="pub-badges">
+      <span class="badge badge-flagship">★ 个人代表作 · First &amp; Corresponding Author</span>
+      <span class="badge badge-q1">npj Climate and Atmospheric Science · Nature Portfolio · JCR Q1</span>
+      <span class="badge badge-venue">Accepted for Publication (2026)</span>
+    </div>
+    <h1 lang="en">Monthly hydroclimatic associations in sampled natural dryland vegetation</h1>
+    <p class="monograph-title-zh">全球采样天然旱地植被的月尺度水文气候条件关联研究</p>
+    <p class="monograph-authors" lang="en"><strong class="me-author"><strong class="me-author">Zecheng Li</strong>*</strong>, Xuanyu Chen, Chng Saun Fong, Yijuan Shen</p>
+    <p class="monograph-affil">Institute for Advanced Studies, Universiti Malaya, Kuala Lumpur, Malaysia; Wuhan College, Wuhan, China · Corresponding author: <a href="mailto:lizecheng3590@gmail.com">lizecheng3590@gmail.com</a></p>
+  </header>
+
+  <section class="monograph-kpi-bar" aria-label="代表作核心量化指标">
+    <div class="flagship-kpi">
+          <strong>7,332</strong>
+          <span>全球天然旱地采样格点</span>
+          <small>从 20,311 个旱地网格中经自然植被 ≥85% 与质量掩膜严格筛选，7,318 个成功收敛</small>
+        </div><div class="flagship-kpi">
+          <strong>83.3%</strong>
+          <span>Lag-1 前导月集中度</span>
+          <small>严格滞后 PCMCI 保留的 5,638 条显著关联中 4,694 条集中于前一个月；PCMCI+ 中 Lag 0–1 占 96.1%</small>
+        </div><div class="flagship-kpi">
+          <strong>58.1%</strong>
+          <span>PET 首要统计支持占比</span>
+          <small>在 4,029 个检出格点中，PET 占 58.1%，SPEI-6 占 27.6%，土壤水占 14.3%，另有 1,019 个格点呈现水热双路径共存</small>
+        </div><div class="flagship-kpi">
+          <strong>95.6%</strong>
+          <span>时序窗口跨代理稳健性</span>
+          <small>SOIL 替换为气候水分亏缺 DEF 时，月份一致性达 95.6%，而水/需求角色一致性仅 46.7%——证明“时序比路径更稳”</small>
+        </div>
+  </section>
+
+  <section class="monograph-abstracts">
+    <div class="abstract-card">
+      <h2>中文研究摘要与核心贡献</h2>
+      <p>月尺度卫星遥感为评估全球干旱区植被绿度与气候变化的关系提供了统一的时间标尺，但不同水文气候指标本身包含不同长度的历史累积信息。本研究基于 2001–2023 年（共 276 个月）0.5° 全球网格数据，在严格筛选自然植被覆盖度（≥85% 自然植被、≤5% 人为覆盖、干旱指数 0.05 ≤ AI &lt; 0.65）与观测质量后，对全球 7,332 个天然旱地格点的增强植被指数（MODIS EVI）季节异常进行系统分析（成功拟合 7,318 个格点，占全球陆地主导旱地网格的 39.0%）。通过严格滞后 PCMCI（1–6 个月前导）与包含当月的 PCMCI+（0–6 个月）条件独立性因果发现框架及全局 Benjamini–Hochberg FDR 校正（q ≤ 0.05），研究发现：当允许当月进入搜索时，6,125 条保留关联中有 69.6% 落在当月（lag 0）、26.5% 落在前一个月（lag 1），合计达 96.1%；在严格前导（lag 1–6）模型保留的 5,638 条关联中，83.3%（4,694 条）集中于前一个月（lag 1），且潜在蒸散发（PET）在 58.1% 的检出格点中获得最强统计支持（SPEI-6 占 27.6%，土壤水 SOIL 占 14.3%）。跨越 18 项严苛敏感性与稳健性实验表明：水文气候与植被的“耦合时间窗口（Selected Month）”一致性高达 92.2%–98.5%，远比“水分供给 vs. 大气蒸发需求主导类别（Indicator Role）”的分类更为稳健。</p>
+    </div>
+    <div class="abstract-card" lang="en">
+      <h2>Abstract (Original Manuscript)</h2>
+      <p>Monthly satellite observations provide a common timescale for relating dryland greenness to climate, although the indicators contain histories of different lengths. We analyzed Enhanced Vegetation Index (EVI) anomalies from 2001–2023 in 7,332 cells selected for natural vegetation and observation quality (covering 39.0% of the land-majority dryland grid). Of the 6,125 links retained when the current month was eligible (PCMCI+), 69.6% fell in that month and 26.5% one month earlier. The antecedent-only PCMCI search retained 5,638 links, with 83.3% at lag 1. Potential evapotranspiration (PET) received the greatest statistical support in 58.1% of detected cells. Across 18 sensitivity and robustness checks—including omitting SPEI-6, restricting to active EVI months, substituting NDVI/DEF/VPD/Tmax, fire-month exclusion, and nonlinear GPDC testing—the selected month remained substantially more consistent (92.2%–98.5% agreement) than the water-versus-demand category classification.</p>
+    </div>
+  </section>
+
+  <section class="monograph-figures" aria-labelledby="figures-heading">
+    <div class="section-header">
+      <div>
+        <span class="section-kicker">PUBLICATION FIGURES · 论文原版全套高清主图 (Fig. 1 – Fig. 4)</span>
+        <h2 id="figures-heading">核心可视化结果与科学解读</h2>
+      </div>
+      <span class="gallery-hint">点击任意图片可开启全屏高清缩放检视</span>
+    </div>
+
+    <div class="monograph-figure-list">
+      <figure class="monograph-figure-card" id="fig-1">
+            <div class="figure-img-box">
+              <button type="button" class="figure-zoom-trigger" data-lightbox-src="/assets/npj-fig1-workflow.jpg" data-lightbox-caption="Figure 1 · 全球天然旱地采样框架、条件滞后检验架构与空间覆盖 — (a) 研究架构：整合 0.5° 网格上的 SPEI-6、TerraClimate 土壤水（SOIL）、参考蒸散发（PET）与 MODIS EVI（2001–2023 共 276 个月），扣除季节循环与 ENSO（ONI t, t-1, t-2）线性遥相关后，逐格点独立运行 PCMCI 条件独立性检验并进行全局 BH-FDR (q ≤ 0.05) 校正。(b) 全球 7,332 个候选天然旱地格点的干旱等级分布（半干旱 3,439、干旱 2,880、干亚湿润 1,013）。(c) 从 20,311 个干旱指数网格到 7,318 个成功拟合网格的五步筛选轨迹。">
+                <img src="/assets/npj-fig1-workflow.jpg" alt="Figure 1 · 全球天然旱地采样框架、条件滞后检验架构与空间覆盖" loading="eager">
+                <span class="zoom-pill"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6"/><path d="M8 11h6"/></svg> 点击全屏放大查看细节</span>
+              </button>
+            </div>
+            <figcaption class="figure-caption-box">
+              <span class="figure-tag">Figure 1</span>
+              <h3>Figure 1 · 全球天然旱地采样框架、条件滞后检验架构与空间覆盖</h3>
+              <p class="figure-title-en" lang="en">Fig. 1 · Study architecture, global dryland sampling domain, and grid selection trace</p>
+              <p class="figure-desc">(a) 研究架构：整合 0.5° 网格上的 SPEI-6、TerraClimate 土壤水（SOIL）、参考蒸散发（PET）与 MODIS EVI（2001–2023 共 276 个月），扣除季节循环与 ENSO（ONI t, t-1, t-2）线性遥相关后，逐格点独立运行 PCMCI 条件独立性检验并进行全局 BH-FDR (q ≤ 0.05) 校正。(b) 全球 7,332 个候选天然旱地格点的干旱等级分布（半干旱 3,439、干旱 2,880、干亚湿润 1,013）。(c) 从 20,311 个干旱指数网格到 7,318 个成功拟合网格的五步筛选轨迹。</p>
+            </figcaption>
+          </figure><figure class="monograph-figure-card" id="fig-2">
+            <div class="figure-img-box">
+              <button type="button" class="figure-zoom-trigger" data-lightbox-src="/assets/npj-fig2-timing.jpg" data-lightbox-caption="Figure 2 · 月尺度水文气候关联的滞后时序分布与首要统计支持指标全球分布 — (a) 允许当月关系（PCMCI+，6,125 条关联）时，69.6% 落在 lag 0，26.5% 落在 lag 1。(b) 严格前导检验（PCMCI，5,638 条关联）时，83.3% 集中于 lag 1（1 个月前），lag 2 骤降至 7.7%。(c) 严格滞后模型中各格点 BH 校正后 q 值最小的首要支持指标全球分布（PET 58.1%，SPEI-6 27.6%，SOIL 14.3%）。">
+                <img src="/assets/npj-fig2-timing.jpg" alt="Figure 2 · 月尺度水文气候关联的滞后时序分布与首要统计支持指标全球分布" loading="lazy">
+                <span class="zoom-pill"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6"/><path d="M8 11h6"/></svg> 点击全屏放大查看细节</span>
+              </button>
+            </div>
+            <figcaption class="figure-caption-box">
+              <span class="figure-tag">Figure 2</span>
+              <h3>Figure 2 · 月尺度水文气候关联的滞后时序分布与首要统计支持指标全球分布</h3>
+              <p class="figure-title-en" lang="en">Fig. 2 · Lag distribution of retained climate–EVI links (PCMCI+ vs. PCMCI) and global top-supported indicator map</p>
+              <p class="figure-desc">(a) 允许当月关系（PCMCI+，6,125 条关联）时，69.6% 落在 lag 0，26.5% 落在 lag 1。(b) 严格前导检验（PCMCI，5,638 条关联）时，83.3% 集中于 lag 1（1 个月前），lag 2 骤降至 7.7%。(c) 严格滞后模型中各格点 BH 校正后 q 值最小的首要支持指标全球分布（PET 58.1%，SPEI-6 27.6%，SOIL 14.3%）。</p>
+            </figcaption>
+          </figure><figure class="monograph-figure-card" id="fig-3">
+            <div class="figure-img-box">
+              <button type="button" class="figure-zoom-trigger" data-lightbox-src="/assets/npj-fig3-groups.jpg" data-lightbox-caption="Figure 3 · 水分供给与大气蒸发需求关联路径的空间共存格局及干旱等级构成 — (a) 保留关联类别全球地图：仅水分指标（Water only，1,344 格点）、仅 PET（PET only，1,666 格点）、水热联合检出（Joint，1,019 格点）与无显著关联（3,289 格点）。(b) 干旱（Arid）、半干旱（Semi-arid）与干亚湿润（Dry sub-humid）三大气候区的面积加权构成比例。">
+                <img src="/assets/npj-fig3-groups.jpg" alt="Figure 3 · 水分供给与大气蒸发需求关联路径的空间共存格局及干旱等级构成" loading="lazy">
+                <span class="zoom-pill"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6"/><path d="M8 11h6"/></svg> 点击全屏放大查看细节</span>
+              </button>
+            </div>
+            <figcaption class="figure-caption-box">
+              <span class="figure-tag">Figure 3</span>
+              <h3>Figure 3 · 水分供给与大气蒸发需求关联路径的空间共存格局及干旱等级构成</h3>
+              <p class="figure-title-en" lang="en">Fig. 3 · Spatial coexistence of retained water-supply and atmospheric-demand indicator groups across aridity classes</p>
+              <p class="figure-desc">(a) 保留关联类别全球地图：仅水分指标（Water only，1,344 格点）、仅 PET（PET only，1,666 格点）、水热联合检出（Joint，1,019 格点）与无显著关联（3,289 格点）。(b) 干旱（Arid）、半干旱（Semi-arid）与干亚湿润（Dry sub-humid）三大气候区的面积加权构成比例。</p>
+            </figcaption>
+          </figure><figure class="monograph-figure-card" id="fig-4">
+            <div class="figure-img-box">
+              <button type="button" class="figure-zoom-trigger" data-lightbox-src="/assets/npj-fig4-robustness.jpg" data-lightbox-caption="Figure 4 · 18 项敏感性实验中的“月份 vs. 指标角色”一致性对比及代理变量替换转移流图 — (a) 双环一致性图：外环（青色）代表“选中滞后月份（Selected month）”与主模型的一致率（在严格前导代理对比中均高达 92.2%–100%），内环（棕色）代表“水分/大气需求宽泛角色（Indicator role）”一致率。(b) 当土壤水（SOIL）被替换为气候水分亏缺（DEF）时，6,808 个共同拟合格点在四类路径间的显著迁移（Sankey 图），直观揭示指标定义如何重塑主导路径分类。">
+                <img src="/assets/npj-fig4-robustness.jpg" alt="Figure 4 · 18 项敏感性实验中的“月份 vs. 指标角色”一致性对比及代理变量替换转移流图" loading="lazy">
+                <span class="zoom-pill"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6"/><path d="M8 11h6"/></svg> 点击全屏放大查看细节</span>
+              </button>
+            </div>
+            <figcaption class="figure-caption-box">
+              <span class="figure-tag">Figure 4</span>
+              <h3>Figure 4 · 18 项敏感性实验中的“月份 vs. 指标角色”一致性对比及代理变量替换转移流图</h3>
+              <p class="figure-title-en" lang="en">Fig. 4 · Agreement on selected month versus indicator role across 18 sensitivity checks and Sankey classification transitions</p>
+              <p class="figure-desc">(a) 双环一致性图：外环（青色）代表“选中滞后月份（Selected month）”与主模型的一致率（在严格前导代理对比中均高达 92.2%–100%），内环（棕色）代表“水分/大气需求宽泛角色（Indicator role）”一致率。(b) 当土壤水（SOIL）被替换为气候水分亏缺（DEF）时，6,808 个共同拟合格点在四类路径间的显著迁移（Sankey 图），直观揭示指标定义如何重塑主导路径分类。</p>
+            </figcaption>
+          </figure>
+    </div>
+  </section>
+
+  <section class="monograph-methodology">
+    <h2>方法学架构与可复现数据工程亮点</h2>
+    <div class="method-cards">
+      <div class="method-card">
+        <h3>1. 严苛的天然旱地定义与五步网格纯度筛查</h3>
+        <p>在 2001–2023 年（$T = 276$ 个月）全球 $0.5^circ$ 网格上，基于 TerraClimate 月降水 $P_{it}$ 与参考蒸散发 $\mathrm{PET}_{it}$ 计算干旱指数 $\mathrm{AI}_i = \sum P_{it} / \sum \mathrm{PET}_{it} \in [0.05, 0.65)$。随后融合 23 期年度 MCD12C1 v061 IGBP 土地覆盖数据，严格要求<strong>自然植被覆盖率 $\ge 85\%$ 且人为改造覆盖率 $\le 5\%$</strong>，并在聚合 $0.05^circ$ MOD13C2 v061 EVI 时仅保留 Reliability 0/1 高质量像元且要求 $\overline{\mathrm{EVI}} \ge 0.02$，最终从 20,311 个旱地网格中心提炼出 7,332 个高纯度天然旱地候选格点（7,318 个成功收敛）。</p>
+      </div>
+      <div class="method-card">
+        <h3>2. 日历月季节异常标准化与 ENSO 全球遥相关剥离</h3>
+        <p>为消除季节周期以及厄尔尼诺—南方涛动（ENSO）引发的全球多地同步异常混杂，首先在每个格点 $i$ 与日历月 $m$ 内构建标准化季节异常 $z_{iym} = (x_{iym} - \bar{x}_{im}) / s_{im}$，随后对每个序列关于当月及滞后 1、2 个月的海洋尼诺指数（ONI at $t, t-1, t-2$）做最小二乘回归取残差，并且严格保持缺失月不插值（Missing months stay missing），杜绝人工插值引入的伪自相关。</p>
+      </div>
+      <div class="method-card">
+        <h3>3. 严格滞后 PCMCI 与当月 PCMCI+ 双轨因果图搜索</h3>
+        <p>在每个格点独立运行两组条件独立性搜索：（1）<strong>严格前导 PCMCI</strong>（仅允许气候出现在绿度之前 1–6 个月，每格点 $3 \times 6 = 18$ 项候选检验，全球共 131,724 项有限 $p$ 值家族）；（2）<strong>包含当月的 PCMCI+</strong>（滞后 0–6 个月）。两组搜索分别在各自全集上实施全局 <strong>Benjamini–Hochberg FDR 校正（$q \le 0.05$）</strong>，精确刻画历史自相关与协同气候变量控制后的净关联。</p>
+      </div>
+      <div class="method-card">
+        <h3>4. 18 项敏感性压力测试与“时序 vs. 路径”二元一致性定理</h3>
+        <p>通过系统替换植被指标（NDVI）、水分代理（SPEI-3、剔除 SPEI-6、气候水分亏缺 DEF）、蒸发需求代理（VPD、$T_{\max}$）、剔除 MCD64A1 火灾燃烧月份、限定活跃生长季、扩展 12 个月窗口、2,000 次 $10^circ/15^circ/20^circ$ 空间块重采样、$20^circ \times 30^circ$ 超级块留一法以及非线性高斯过程距离相关（GPDC）检验，证明了<strong>选中滞后月一致率（92.2%–98.5%）系统性高于水/需求宽泛角色一致率（46.7%–96.9%）</strong>。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="monograph-bibtex">
+    <div class="bib-header">
+      <h2>引用本文 (BibTeX Citation)</h2>
+      <button type="button" class="btn-copy-bib" data-copy-target="flagship-bib-code"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> <span>复制 BibTeX</span></button>
+    </div>
+    <pre><code id="flagship-bib-code">@article{li2026monthly,
+  title={Monthly hydroclimatic associations in sampled natural dryland vegetation},
+  author={Li, Zecheng and Chen, Xuanyu and Fong, Chng Saun and Shen, Yijuan},
+  journal={npj Climate and Atmospheric Science},
+  year={2026},
+  publisher={Nature Portfolio},
+  note={Accepted for publication (JCR Q1)}
+}</code></pre>
+  </section>
+</article>
+</main>
+
+  <div class="lightbox" id="figure-lightbox" role="dialog" aria-modal="true" aria-label="图表高清预览" hidden>
+    <div class="lightbox-backdrop" data-close-lightbox></div>
+    <div class="lightbox-content">
+      <button type="button" class="lightbox-close" data-close-lightbox aria-label="关闭高清预览">× 关闭预览 (Esc)</button>
+      <img id="lightbox-img" src="" alt="">
+      <p id="lightbox-caption" class="lightbox-caption"></p>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div class="footer-brand">
+        <strong>李泽城 · Zecheng Li</strong>
+        <p>马来亚大学环境保护博士候选人 · 悉尼大学计算机科学学士 & 信息技术（数据分析）硕士 · IPCC AR7 第四章专家评审</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://scholar.google.com/citations?user=BJvzLlcAAAAJ" target="_blank" rel="noopener">Google Scholar</a>
+        <a href="https://orcid.org/0009-0002-7197-6679" target="_blank" rel="noopener">ORCID</a>
+        <a href="https://www.scopus.com/authid/detail.uri?authorId=59641998600" target="_blank" rel="noopener">Scopus</a>
+        <a href="https://www.linkedin.com/in/zecheng-li-a7b858399/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="mailto:lizecheng3590@gmail.com">Email</a>
+        <a href="/assets/Zecheng_Li_Academic_CV.pdf" target="_blank" rel="noopener">CV (PDF)</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

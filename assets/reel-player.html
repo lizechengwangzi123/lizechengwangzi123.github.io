@@ -1,0 +1,1565 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zecheng Li — Research Reel</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  html,body{margin:0;width:100%;height:100%;background:#05060a;overflow:hidden;font-family:system-ui,-apple-system,sans-serif;user-select:none}
+  canvas{display:block;width:100%;height:100%;object-fit:contain}
+  #overlay-play{position:absolute;inset:0 0 48px 0;display:flex;align-items:center;justify-content:center;cursor:pointer;background:rgba(5,6,10,.28);transition:opacity .2s}
+  #overlay-play.is-playing{opacity:0;pointer-events:none}
+  .play-pill{display:flex;align-items:center;gap:10px;padding:13px 26px;border-radius:999px;background:rgba(15,23,42,.86);border:1.5px solid rgba(255,138,61,.75);color:#fff;font:650 16px/1 system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.55);backdrop-filter:blur(8px)}
+  .play-pill span.tri{color:#ff8a3d;font-size:18px}
+  #controls{position:absolute;left:0;right:0;bottom:0;height:46px;background:linear-gradient(180deg,rgba(5,6,10,0),rgba(5,6,10,.92) 35%);display:flex;align-items:center;gap:10px;padding:0 14px;color:#e2e8f0;font:600 12px/1 Menlo,monospace}
+  .ctrl-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:6px;height:28px;padding:0 10px;font:600 12px/1 system-ui,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+  .ctrl-btn:hover{border-color:#ff8a3d;background:rgba(255,138,61,.18)}
+  #scrub-wrap{flex:1;height:20px;display:flex;align-items:center;cursor:pointer;position:relative}
+  #scrub-track{width:100%;height:5px;background:rgba(255,255,255,.18);border-radius:999px;position:relative;overflow:hidden}
+  #scrub-fill{height:100%;width:0%;background:linear-gradient(90deg,#7a2ea0,#ff8a3d,#ffe39a);border-radius:999px}
+  #time-label{min-width:84px;text-align:right;color:#cbd5e1;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<div id="overlay-play" title="点击播放 / 暂停">
+  <div class="play-pill"><span class="tri">▶</span><span>点击播放 80 秒个人学术短片 (含配乐)</span></div>
+</div>
+<div id="controls">
+  <button type="button" class="ctrl-btn" id="btn-toggle">▶ 播放</button>
+  <div id="scrub-wrap" title="拖动或点击跳转进度">
+    <div id="scrub-track"><div id="scrub-fill"></div></div>
+  </div>
+  <span id="time-label">00:00 / 01:20</span>
+  <button type="button" class="ctrl-btn" id="btn-mute">🔊 配乐</button>
+  <button type="button" class="ctrl-btn" id="btn-fs" title="全屏播放">⛶</button>
+</div>
+<script src="dots.js"></script>
+<script>
+// =====================================================================
+//  ZECHENG LI — research reel.  80 s, 96 BPM (bar = 2.5 s).
+//  renderAt(t) is a pure function of time: no Math.random, no clock,
+//  no carried state.  ?t=12.3 freezes a moment; ?capture=1 for export.
+// =====================================================================
+const W = 1920, H = 1080, DUR = 80;
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const SANS = 'system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif';
+const MONO = 'Menlo, "SF Mono", Monaco, monospace';
+const INK = '#eef1f7', MUTED = '#8f98ab', DIM = '#5b6274';
+const ORANGE = '#ff8a3d', AMBER = '#fcb33a', CYAN = '#56d4ea', RED = '#ff4f45';
+
+// ---------- math ----------
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const lerp = (a, b, t) => a + (b - a) * t;
+const P = (t, a, b) => clamp((t - a) / (b - a));
+const eOutC = x => 1 - Math.pow(1 - x, 3);
+const eInOutC = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const eOutExpo = x => x >= 1 ? 1 : 1 - Math.pow(2, -10 * x);
+const eInOutS = x => x * x * (3 - 2 * x);
+function spring(x, zeta = 0.72, settle = 0.35) {      // closed-form step response
+  if (x <= 0) return 0;
+  const wn = 4 / (zeta * settle);
+  if (zeta < 1) {
+    const wd = wn * Math.sqrt(1 - zeta * zeta);
+    return 1 - Math.exp(-zeta * wn * x) * (Math.cos(wd * x) + zeta * wn / wd * Math.sin(wd * x));
+  }
+  return 1 - Math.exp(-wn * x) * (1 + wn * x);
+}
+function hash(n) { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
+function hash2(a, b) { return hash(a * 57.0 + b * 113.0 + 0.5); }
+function vnoise(x, y, z) {
+  const xi = Math.floor(x), yi = Math.floor(y), zi = Math.floor(z);
+  const xf = x - xi, yf = y - yi, zf = z - zi;
+  const u = eInOutS(xf), v = eInOutS(yf), w = eInOutS(zf);
+  const h = (i, j, k) => hash(i * 157 + j * 113 + k * 271);
+  const a = lerp(lerp(h(xi, yi, zi), h(xi + 1, yi, zi), u), lerp(h(xi, yi + 1, zi), h(xi + 1, yi + 1, zi), u), v);
+  const b = lerp(lerp(h(xi, yi, zi + 1), h(xi + 1, yi, zi + 1), u), lerp(h(xi, yi + 1, zi + 1), h(xi + 1, yi + 1, zi + 1), u), v);
+  return lerp(a, b, w);
+}
+function fbm(x, y, z) { return vnoise(x, y, z) * .55 + vnoise(x * 2.1, y * 2.1, z * 1.3) * .3 + vnoise(x * 4.3, y * 4.3, z * 1.7) * .15; }
+
+// ---------- colour ----------
+const INFERNO = [[0, 0, 4], [40, 11, 84], [101, 21, 110], [159, 42, 99], [212, 72, 66], [245, 125, 21], [250, 193, 39], [252, 255, 164]];
+function cmap(stops, v) {
+  v = clamp(v) * (stops.length - 1); const i = Math.min(stops.length - 2, Math.floor(v)), f = v - i;
+  const a = stops[i], b = stops[i + 1];
+  return [lerp(a[0], b[0], f), lerp(a[1], b[1], f), lerp(a[2], b[2], f)];
+}
+const inferno = v => cmap(INFERNO, v);
+const STRIPES = [[8, 48, 107], [33, 102, 172], [67, 147, 195], [146, 197, 222], [247, 247, 247], [244, 165, 130], [214, 96, 77], [178, 24, 43], [103, 0, 13]];
+const rgb = (c, a = 1) => `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a})`;
+
+// ---------- drawing helpers ----------
+function font(size, weight = 500, fam = SANS) { return `${weight} ${size}px ${fam}`; }
+function text(s, x, y, o = {}) {
+  ctx.save();
+  ctx.font = font(o.size || 32, o.weight || 500, o.mono ? MONO : SANS);
+  ctx.fillStyle = o.color || INK;
+  ctx.textAlign = o.align || 'left';
+  ctx.textBaseline = o.base || 'alphabetic';
+  ctx.letterSpacing = (o.ls || 0) + 'px';
+  if (o.alpha !== undefined) ctx.globalAlpha *= o.alpha;
+  if (o.blur > 0.3) ctx.filter = `blur(${o.blur.toFixed(1)}px)`;
+  ctx.fillText(s, x, y);
+  ctx.restore();
+}
+function measure(s, size, weight = 500, mono = false, ls = 0) {
+  ctx.save(); ctx.font = font(size, weight, mono ? MONO : SANS); ctx.letterSpacing = ls + 'px';
+  const w = ctx.measureText(s).width; ctx.restore(); return w;
+}
+function wrap(s, maxW, size, weight = 500) {
+  const words = s.split(' '); const lines = []; let cur = '';
+  for (const w of words) {
+    const tst = cur ? cur + ' ' + w : w;
+    if (measure(tst, size, weight) > maxW && cur) { lines.push(cur); cur = w; } else cur = tst;
+  }
+  if (cur) lines.push(cur); return lines;
+}
+function rrect(x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+// reveal: blur-in + rise; returns k in 0..1
+function rv(lt, start, dur = 0.5) { return eOutC(P(lt, start, start + dur)); }
+function layer(alpha, blur, fn, dx = 0, dy = 0, sc = 1, cx = W / 2, cy = H / 2) {
+  if (alpha <= 0.004) return;
+  ctx.save();
+  ctx.globalAlpha *= clamp(alpha);
+  if (blur > 0.3) ctx.filter = `blur(${blur.toFixed(1)}px)`;
+  if (sc !== 1 || dx || dy) { ctx.translate(cx + dx, cy + dy); ctx.scale(sc, sc); ctx.translate(-cx, -cy); }
+  fn(); ctx.restore();
+}
+function chip(label, x, y, o = {}) {      // pill centred on x if o.center
+  const size = o.size || 24, padX = o.padX || 22, h = o.h || size * 1.9;
+  const w = measure(label, size, o.weight || 600, o.mono, o.ls || 0) + padX * 2;
+  const x0 = o.center ? x - w / 2 : x;
+  ctx.save();
+  if (o.alpha !== undefined) ctx.globalAlpha *= o.alpha;
+  rrect(x0, y - h / 2, w, h, h / 2);
+  ctx.fillStyle = o.fill || 'rgba(255,255,255,0.05)'; ctx.fill();
+  ctx.lineWidth = o.lw || 1.5; ctx.strokeStyle = o.stroke || 'rgba(255,255,255,0.25)'; ctx.stroke();
+  ctx.font = font(size, o.weight || 600, o.mono ? MONO : SANS); ctx.letterSpacing = (o.ls || 0) + 'px';
+  ctx.fillStyle = o.color || INK; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+  ctx.fillText(label, x0 + padX, y + 1);
+  ctx.restore();
+  return w;
+}
+function glowDot(x, y, r, col, a = 1) {
+  ctx.save(); ctx.globalAlpha *= a;
+  const g = ctx.createRadialGradient(x, y, 0, x, y, r * 4);
+  g.addColorStop(0, col); g.addColorStop(0.25, col.replace(/[\d.]+\)$/, '0.35)')); g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r * 4, 0, 7); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, r * 0.55, 0, 7); ctx.fill();
+  ctx.restore();
+}
+function sceneHeader(lt, idx, title, sub, badge) {
+  const k1 = rv(lt, 0.0, 0.5), k2 = rv(lt, 0.15, 0.55), k3 = rv(lt, 0.3, 0.55), k4 = spring(lt - 0.5, 0.65, 0.5);
+  text(idx, 110, 170, { size: 22, weight: 600, mono: true, color: ORANGE, ls: 4, alpha: k1, blur: (1 - k1) * 10 });
+  text(title, 110 + (1 - k2) * -30, 240, { size: 62, weight: 750, alpha: k2, blur: (1 - k2) * 12, ls: -1 });
+  text(sub, 110, 290, { size: 27, weight: 450, color: MUTED, alpha: k3, blur: (1 - k3) * 10 });
+  if (badge) {
+    const w = measure(badge, 22, 650) + 70;
+    layer(clamp(k4 * 1.4), 0, () => {
+      chip(badge, 1810 - w, 175, { size: 22, weight: 650, stroke: 'rgba(255,138,61,0.75)', fill: 'rgba(255,138,61,0.10)', color: '#ffd2b0', padX: 35 });
+    }, 0, 0, 0.6 + 0.4 * k4, 1810 - w / 2, 175);
+  }
+}
+
+// ---------- persistent background ----------
+const fieldC = document.createElement('canvas'); fieldC.width = 128; fieldC.height = 72;
+const fctx = fieldC.getContext('2d'); const fimg = fctx.createImageData(128, 72);
+const grainC = document.createElement('canvas'); grainC.width = 256; grainC.height = 256;
+(() => { const g = grainC.getContext('2d'), im = g.createImageData(256, 256);
+  for (let i = 0; i < 256 * 256; i++) { const v = hash(i * 0.731 + 3.1) * 255; im.data[i * 4] = im.data[i * 4 + 1] = im.data[i * 4 + 2] = v; im.data[i * 4 + 3] = 255; }
+  g.putImageData(im, 0, 0); })();
+
+function heatLevel(t) {         // how "hot" the ambient field is
+  if (t < 7.5) return lerp(0.25, 0.95, eInOutC(P(t, 0, 6.8)));
+  if (t < 15) return lerp(0.95, 0.35, eOutC(P(t, 7.5, 9)));
+  if (t < 27.5) return lerp(0.3, 0.55, P(t, 25, 27.5));
+  if (t < 37.5) return 0.5;
+  if (t < 47.5) return lerp(0.5, 0.7, P(t, 41, 46));
+  if (t < 67.5) return 0.38;
+  if (t < 72.5) return lerp(0.45, 0.65, P(t, 67.5, 71.5));
+  if (t < 75.0) return lerp(0.65, 0.52, P(t, 72.5, 75.0));
+  return lerp(0.52, 0.36, P(t, 75.0, 80.0));
+}
+function background(t) {
+  ctx.fillStyle = '#05060a'; ctx.fillRect(0, 0, W, H);
+  const lvl = heatLevel(t), d = fimg.data;
+  for (let y = 0; y < 72; y++) for (let x = 0; x < 128; x++) {
+    let n = fbm(x * 0.045 + t * 0.03, y * 0.06 - t * 0.05, t * 0.12);
+    n = clamp((n - 0.28) * 1.6) * lvl * (0.55 + 0.45 * (y / 72));
+    const c = inferno(n * 0.85), i = (y * 128 + x) * 4;
+    d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = 255;
+  }
+  fctx.putImageData(fimg, 0, 0);
+  ctx.save(); ctx.globalAlpha = 0.42; ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(fieldC, 0, 0, W, H); ctx.restore();
+  // fine grid
+  ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,0.025)'; ctx.lineWidth = 1; ctx.beginPath();
+  for (let x = 0; x <= W; x += 60) { ctx.moveTo(x + .5, 0); ctx.lineTo(x + .5, H); }
+  for (let y = 0; y <= H; y += 60) { ctx.moveTo(0, y + .5); ctx.lineTo(W, y + .5); }
+  ctx.stroke(); ctx.restore();
+}
+function postFX(t) {
+  const g = ctx.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 1.05);
+  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.72)');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  const f = Math.floor(t * 30);
+  ctx.save(); ctx.globalAlpha = 0.045; ctx.globalCompositeOperation = 'overlay';
+  const ox = Math.floor(hash(f) * 256), oy = Math.floor(hash(f + 99) * 256);
+  for (let x = -ox; x < W; x += 256) for (let y = -oy; y < H; y += 256) ctx.drawImage(grainC, x, y);
+  ctx.restore();
+}
+
+// ---------- HUD ----------
+const CUTS = [0, 7.5, 15, 27.5, 37.5, 47.5, 57.5, 67.5, 80];
+const SECTIONS = ['PROLOGUE', 'IDENTITY', 'JOURNEY', 'RESEARCH · VULNERABILITY', 'RESEARCH · EARLY WARNING', 'PUBLICATIONS', 'SERVICE & TOOLKIT', 'IMPACT & CONTACT'];
+function sceneIndex(t) { for (let i = CUTS.length - 2; i >= 0; i--) if (t >= CUTS[i]) return i; return 0; }
+function hud(t) {
+  const a = P(t, 7.6, 8.4); if (a <= 0) return;
+  ctx.save(); ctx.globalAlpha = eOutC(a);
+  rrect(110, 52, 44, 44, 8); ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 1.5; ctx.stroke();
+  text('ZL', 132, 81, { size: 18, weight: 700, mono: true, align: 'center' });
+  text('DR. ZECHENG LI', 172, 74, { size: 16, weight: 650, ls: 4 });
+  text('RESEARCH REEL · 2026', 172, 94, { size: 13, weight: 500, mono: true, color: DIM, ls: 2 });
+  // section label with vertical roll swap
+  const si = sceneIndex(t), lt = t - CUTS[si];
+  const k = spring(lt, 0.8, 0.5);
+  ctx.save(); ctx.beginPath(); ctx.rect(1000, 50, 812, 50); ctx.clip();
+  const lab = (i) => `${String(i + 1).padStart(2, '0')} / 08 — ${SECTIONS[i]}`;
+  text(lab(si), 1810, 82 + (1 - k) * 34, { size: 16, weight: 600, mono: true, align: 'right', ls: 2, color: '#cfd5e2' });
+  if (si > 1 && k < 1) text(lab(si - 1), 1810, 82 - k * 34, { size: 16, weight: 600, mono: true, align: 'right', ls: 2, color: '#cfd5e2' });
+  ctx.restore();
+  // progress
+  const y = 1030, x0 = 110, x1 = 1810;
+  ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(x0, y, x1 - x0, 2);
+  const gr = ctx.createLinearGradient(x0, 0, x1, 0); gr.addColorStop(0, '#7a2ea0'); gr.addColorStop(0.5, ORANGE); gr.addColorStop(1, '#ffe39a');
+  ctx.fillStyle = gr; ctx.fillRect(x0, y, (x1 - x0) * clamp(t / DUR), 2);
+  for (let i = 1; i < CUTS.length - 1; i++) { const x = x0 + (x1 - x0) * CUTS[i] / DUR; ctx.fillStyle = t >= CUTS[i] ? '#ffd2b0' : 'rgba(255,255,255,0.3)'; ctx.fillRect(x - 1, y - 4, 2, 10); }
+  ctx.restore();
+}
+function cutFlash(t) {
+  for (let i = 1; i < CUTS.length - 1; i++) {
+    const d = t - CUTS[i];
+    if (d >= 0 && d < 0.35) { ctx.save(); ctx.globalAlpha = 0.10 * (1 - d / 0.35); ctx.fillStyle = '#ffe2c4'; ctx.fillRect(0, 0, W, H); ctx.restore(); }
+  }
+}
+
+// =====================================================================
+// SCENE 1 — PROLOGUE (0 – 7.5)
+// =====================================================================
+const TYPE1 = 'The planet is getting hotter.', TYPE2 = 'Who is most at risk  —  and when?', CPS = 0.045;
+function typed(s, t0, lt) { return s.slice(0, clamp(Math.floor((lt - t0) / CPS) + 1, 0, s.length)); }
+function scene1(lt) {
+  const N = 72, sw = W / N;
+  const squash = eInOutC(P(lt, 5.9, 7.1));
+  const sh = lerp(H, 6, squash);
+  for (let i = 0; i < N; i++) {
+    const appear = eOutC(P(lt, 0.15 + i * 0.022, 0.75 + i * 0.022));
+    if (appear <= 0) continue;
+    const v = clamp(0.06 + 0.86 * Math.pow(i / (N - 1), 1.9) + 0.18 * (hash(i * 3.3) - 0.5));
+    const c = cmap(STRIPES, v);
+    const h = sh * appear;
+    ctx.fillStyle = rgb(c, 0.62 + squash * 0.38);
+    ctx.fillRect(Math.floor(i * sw), H / 2 - h / 2, Math.ceil(sw) + 1, h);
+  }
+  if (squash > 0.6) {   // glowing line
+    const g = (squash - 0.6) / 0.4;
+    ctx.save(); ctx.globalAlpha = g; ctx.shadowColor = ORANGE; ctx.shadowBlur = 40; ctx.fillStyle = '#ffd9b5';
+    ctx.fillRect(0, H / 2 - 1.5, W, 3); ctx.restore();
+  }
+  // darken for legibility
+  const dg = ctx.createLinearGradient(0, 0, W, 0);
+  dg.addColorStop(0, 'rgba(5,6,10,0.88)'); dg.addColorStop(0.62, 'rgba(5,6,10,0.55)'); dg.addColorStop(1, 'rgba(5,6,10,0.15)');
+  ctx.fillStyle = dg; ctx.globalAlpha = 1 - squash; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
+
+  const out = P(lt, 5.7, 6.4);
+  layer(1 - out, out * 16, () => {
+    const s1 = typed(TYPE1, 0.9, lt), s2 = typed(TYPE2, 3.6, lt);
+    const sz = 84, x = 150, y1 = 470, y2 = 590;
+    if (lt >= 0.9) {
+      text(s1, x, y1, { size: sz, weight: 650, ls: -1.5 });
+      if (s1.length === TYPE1.length) {           // recolour "hotter."
+        const pre = measure('The planet is getting ', sz, 650, false, -1.5);
+        const k = P(lt, 2.3, 2.9);
+        text('hotter.', x + pre, y1, { size: sz, weight: 650, ls: -1.5, color: ORANGE, alpha: k });
+      }
+    }
+    if (lt >= 3.6) {
+      text(s2, x, y2, { size: sz, weight: 650, ls: -1.5, color: '#d9dee8' });
+      if (s2.length === TYPE2.length) {
+        const pre = measure('Who is most at risk  —  ', sz, 650, false, -1.5);
+        text('and when?', x + pre, y2, { size: sz, weight: 650, ls: -1.5, color: AMBER, alpha: P(lt, 5.15, 5.6) });
+      }
+    }
+    // caret
+    const active = lt < 3.6 ? [s1, y1, TYPE1] : [s2, y2, TYPE2];
+    const blink = (Math.floor(lt / 0.32) % 2 === 0) || (active[0].length < active[2].length);
+    if (lt > 0.4 && blink) {
+      const cx = x + measure(active[0], sz, 650, false, -1.5) + 8;
+      ctx.fillStyle = ORANGE; ctx.fillRect(cx, active[1] - 66, 6, 80);
+    }
+  });
+  // boot line
+  const pct = Math.floor(100 * eInOutC(P(lt, 0.2, 7.2)));
+  const ba = P(lt, 0.2, 0.8) * (1 - P(lt, 7.0, 7.4));
+  text(`> loading  dr_zecheng_li.cv  ·  ${String(pct).padStart(3, ' ')}%`, 150, 980, { size: 20, mono: true, color: MUTED, alpha: ba, ls: 1 });
+  ctx.save(); ctx.globalAlpha = ba; ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(150, 1000, 520, 3);
+  ctx.fillStyle = ORANGE; ctx.fillRect(150, 1000, 520 * pct / 100, 3); ctx.restore();
+}
+
+// =====================================================================
+// SCENE 2 — IDENTITY (7.5 – 15)
+// =====================================================================
+function scene2(lt) {
+  const cx = W / 2;
+  // ripple + burst
+  const rp = P(lt, 0, 1.3);
+  if (rp > 0 && rp < 1) {
+    ctx.save(); ctx.strokeStyle = `rgba(255,170,110,${0.7 * (1 - rp)})`; ctx.lineWidth = 3 + 10 * (1 - rp);
+    ctx.beginPath(); ctx.arc(cx, 540, eOutExpo(rp) * 1300, 0, 7); ctx.stroke(); ctx.restore();
+  }
+  for (let i = 0; i < 160; i++) {
+    const life = P(lt, 0, 1.4 + hash(i) * 1.2); if (life >= 1) continue;
+    const ang = hash(i * 1.7) * Math.PI * 2, dist = (200 + hash(i * 2.9) * 900) * eOutExpo(life);
+    const c = inferno(0.55 + hash(i * 5.1) * 0.45);
+    ctx.fillStyle = rgb(c, (1 - life) * 0.9);
+    const r = 1.5 + hash(i * 7.7) * 3;
+    ctx.fillRect(cx + Math.cos(ang) * dist * 1.4, 540 + Math.sin(ang) * dist * 0.8, r, r);
+  }
+  const ex = P(lt, 7.0, 7.5);
+  layer(1 - ex, ex * 18, () => {
+    // name letters
+    const name = 'DR. ZECHENG LI', sz = 156, ls = 14, wt = 800;
+    const widths = [...name].map(ch => measure(ch, sz, wt) + ls);
+    const total = widths.reduce((a, b) => a + b, 0) - ls;
+    let x = cx - total / 2;
+    for (let i = 0; i < name.length; i++) {
+      const s = spring(lt - 0.08 - i * 0.045, 0.55, 0.65);
+      const a = clamp(s * 1.6);
+      const g = ctx.createLinearGradient(0, 330, 0, 540);
+      g.addColorStop(0, '#ffffff'); g.addColorStop(1, '#ffd8ba');
+      ctx.save(); ctx.globalAlpha = a; if (a < 0.98) ctx.filter = `blur(${((1 - a) * 14).toFixed(1)}px)`;
+      ctx.font = font(sz, wt); ctx.fillStyle = g; ctx.textBaseline = 'alphabetic';
+      ctx.translate(x + widths[i] / 2, 520 + (1 - s) * 140); ctx.rotate((1 - s) * 0.25 * (i % 2 ? 1 : -1));
+      ctx.textAlign = 'center'; ctx.fillText(name[i], -ls / 2, 0); ctx.restore();
+      x += widths[i];
+    }
+    // heat underline
+    const u = eInOutC(P(lt, 0.8, 1.6));
+    if (u > 0) {
+      const ug = ctx.createLinearGradient(cx - total / 2, 0, cx + total / 2, 0);
+      ug.addColorStop(0, '#5b1a8a'); ug.addColorStop(0.5, ORANGE); ug.addColorStop(1, '#ffe59e');
+      ctx.fillStyle = ug; ctx.fillRect(cx - total / 2 * u, 560, total * u, 5);
+    }
+    const k1 = rv(lt, 1.1, 0.6), k2 = rv(lt, 1.35, 0.6);
+    text('Ph.D. in Environmental Protection', cx, 640 + (1 - k1) * 20, { size: 44, weight: 550, align: 'center', alpha: k1, blur: (1 - k1) * 12, color: '#dfe4ee' });
+    text('UNIVERSITI MALAYA  ·  KUALA LUMPUR, MALAYSIA', cx, 692 + (1 - k2) * 20, { size: 21, weight: 500, mono: true, align: 'center', ls: 4, alpha: k2, blur: (1 - k2) * 10, color: MUTED });
+    // vertical roll of identities
+    const roles = [['computer scientist', '#cfd5e2'], ['data analyst', '#cfd5e2'], ['climate-risk researcher', ORANGE]];
+    const swaps = [2.3, 3.4, 4.5];
+    const ra = rv(lt, 2.3, 0.4);
+    if (ra > 0) {
+      const pre = 'trained as a  ';
+      const preW = measure(pre, 34, 450), y = 790;
+      let ri = 0; for (let i = 0; i < swaps.length; i++) if (lt >= swaps[i]) ri = i;
+      const rk = spring(lt - swaps[ri], 0.75, 0.45);
+      const maxW = measure(roles[2][0], 34, 700);
+      const x0 = cx - (preW + maxW) / 2;
+      const label = ri === 2 ? 'now a  ' : (ri === 1 ? 'then a  ' : 'trained as a  ');
+      text(label, x0 + preW, y, { size: 34, weight: 450, color: MUTED, align: 'right', alpha: ra });
+      ctx.save(); ctx.beginPath(); ctx.rect(x0 + preW - 4, y - 46, maxW + 30, 62); ctx.clip();
+      text(roles[ri][0], x0 + preW, y + (1 - rk) * 64, { size: 34, weight: 700, color: roles[ri][1], alpha: ra });
+      const dtSwap = lt - swaps[ri];
+      if (ri > 0 && dtSwap < 0.45) {
+        text(roles[ri - 1][0], x0 + preW, y - rk * 64, { size: 34, weight: 700, color: roles[ri - 1][1], alpha: ra * clamp(1 - dtSwap / 0.32) });
+      }
+      ctx.restore();
+    }
+    // research chips
+    const chips = ['Urban heat vulnerability', 'Machine-learning early warning', 'CMIP6 climate projections'];
+    const cw = chips.map(c => measure(c, 24, 600) + 44);
+    const gap = 22, tot = cw.reduce((a, b) => a + b, 0) + gap * 2;
+    let xx = cx - tot / 2;
+    chips.forEach((c, i) => {
+      const s = spring(lt - 5.0 - i * 0.14, 0.6, 0.45);
+      layer(clamp(s * 1.5), 0, () => chip(c, xx, 890, { size: 24, stroke: rgb(inferno(0.5 + i * 0.17), 0.9), fill: rgb(inferno(0.5 + i * 0.17), 0.10) }),
+        0, (1 - s) * 40, 0.7 + 0.3 * s, xx + cw[i] / 2, 890);
+      xx += cw[i] + gap;
+    });
+  });
+}
+
+// =====================================================================
+// SCENE 3 — JOURNEY (15 – 27.5)
+// =====================================================================
+const CITY = { wuhan: [114.31, 30.59, 'Wuhan'], sydney: [151.21, -33.87, 'Sydney'], kl: [101.69, 3.14, 'Kuala Lumpur'] };
+const HOPS = [['wuhan', 'sydney', 1.25], ['sydney', 'wuhan', 3.75], ['wuhan', 'sydney', 6.25], ['sydney', 'kl', 8.75]];
+const CARDS = [
+  { when: 'WHERE IT STARTS', org: 'Wuhan, China', role: 'Home base', items: ['Curious about code, data — and the climate'], coord: '30.59°N  114.31°E' },
+  { when: '2019 — 2021', org: 'The University of Sydney', role: 'B.Sc. Computer Science', items: ['Algorithm design · Artificial intelligence', 'Data analytics & financial mathematics', 'Thesis: Sustainability & Education'], coord: '33.87°S  151.21°E' },
+  { when: 'DEC 2019 — FEB 2020', org: 'Yuannian High Tech · China', role: 'Remote Controller', items: ['Python file processing & financial variable mapping', 'Financial operations system design & data maintenance'], coord: '30.59°N  114.31°E  ·  REMOTE' },
+  { when: '2022 — 2023', org: 'The University of Sydney', role: 'M.IT · Data Management & Analytics', items: ['Machine learning · Deep learning · NLP', 'Visual analytics & pervasive computing', 'Capstone: IoT network monitoring dashboard'], coord: '33.87°S  151.21°E' },
+  { when: '2023 — 2026', org: 'Universiti Malaya', role: 'Ph.D. in Environmental Protection', items: ['Urban heat risk & environmental data analysis', 'Supervisors: Chng Saun Fong · Siti Hafizah Ab Hamid'], coord: '3.14°N  101.69°E' },
+];
+const YEARS = [2019, 2019, 2019.92, 2020.17, 2023.45, 2026.85];
+const CAM = [[0, 122, 4, 10.5], [1.25, 133, -3, 12.5], [8.75, 130, -4, 12.5], [10.4, 104, 3, 30], [12.5, 102.5, 3.6, 58]];
+function camAt(lt) {
+  // 0→1.6 s: settle from overview onto the Wuhan–Sydney corridor, then a slow drift
+  const k0 = eInOutC(P(lt, 0, 1.6)), k1 = P(lt, 1.6, 8.75);
+  const lon = lerp(lerp(122, 133, k0), 130, k1), lat = lerp(lerp(3, -1.6, k0), -2, k1);
+  const sc = Math.exp(lerp(Math.log(9.5), Math.log(11), k0));
+  return [lon, lat, sc];
+}
+function scene3(lt) {
+  let [clon, clat, sc] = camAt(lt);
+  if (lt >= 8.75) { const k = eInOutC(P(lt, 8.75, 12.5)); clon = lerp(130, 102.5, k); clat = lerp(-2, 3.6, k); sc = Math.exp(lerp(Math.log(11), Math.log(58), eInOutC(P(lt, 9.6, 12.5)))); }
+  const mx = 1200, my = 540;
+  const proj = (lo, la) => [mx + (lo - clon) * sc, my - (la - clat) * sc];
+  const ex = P(lt, 12.05, 12.5);
+  const mapIn = P(lt, 0, 1.6);
+  layer(1 - ex, ex * 14, () => {
+    // dots
+    const D = DOTS.AP, ds = Math.max(2, Math.min(sc * 0.42, 9));
+    const wu = proj(CITY.wuhan[0], CITY.wuhan[1]);
+    const heat = P(lt, 9.8, 12.2);
+    for (let i = 0; i < D.length; i += 2) {
+      const [x, y] = proj(D[i], D[i + 1]);
+      if (x < -20 || x > W + 20 || y < -20 || y > H + 20) continue;
+      const dd = Math.hypot(D[i] - CITY.wuhan[0], D[i + 1] - CITY.wuhan[1]);
+      const a = clamp(mapIn * 2.2 - dd / 70);
+      if (a <= 0) continue;
+      let col = [130, 144, 172], al = 0.55 * a;
+      if (heat > 0) {
+        const dk = Math.hypot(D[i] - CITY.kl[0], D[i + 1] - CITY.kl[1]);
+        const hk = clamp(heat * 1.6 - dk / 25);
+        if (hk > 0) { const n = vnoise(D[i] * 0.4, D[i + 1] * 0.4, lt * 0.3); col = inferno(0.35 + 0.6 * n * hk + 0.05); al = lerp(al, 0.9, hk); }
+      }
+      ctx.fillStyle = rgb(col, al); ctx.fillRect(x - ds / 2, y - ds / 2, ds, ds);
+    }
+    // arcs
+    HOPS.forEach(([a, b, s], hi) => {
+      const p = eInOutC(P(lt, s, s + 1.3)); if (p <= 0) return;
+      const A = proj(CITY[a][0], CITY[a][1]), B = proj(CITY[b][0], CITY[b][1]);
+      const mxp = (A[0] + B[0]) / 2, myp = (A[1] + B[1]) / 2, L = Math.hypot(B[0] - A[0], B[1] - A[1]);
+      const nx = -(B[1] - A[1]) / L, ny = (B[0] - A[0]) / L, bend = L * [0.2, 0.2, 0.4, 0.24][hi];
+      const C = [mxp + nx * bend, myp + ny * bend];
+      const q = (u) => [(1 - u) * (1 - u) * A[0] + 2 * (1 - u) * u * C[0] + u * u * B[0], (1 - u) * (1 - u) * A[1] + 2 * (1 - u) * u * C[1] + u * u * B[1]];
+      const old = lt > s + 2.2 ? 0.35 : 1;
+      ctx.save(); ctx.lineWidth = 3; ctx.strokeStyle = hi === 3 ? `rgba(255,138,61,${old})` : `rgba(86,212,234,${old * 0.9})`;
+      ctx.setLineDash([10, 8]); ctx.lineDashOffset = -lt * 40; ctx.beginPath();
+      const steps = 60; for (let k = 0; k <= steps * p; k++) { const pt = q(k / steps); k ? ctx.lineTo(pt[0], pt[1]) : ctx.moveTo(pt[0], pt[1]); }
+      ctx.stroke(); ctx.restore();
+      if (p < 1) { const h = q(p); glowDot(h[0], h[1], 7, hi === 3 ? 'rgba(255,138,61,1)' : 'rgba(86,212,234,1)'); }
+    });
+    // pins
+    const pinT = { wuhan: 0.3, sydney: 2.55, kl: 10.05 };
+    for (const k in CITY) {
+      const s = spring(lt - pinT[k], 0.55, 0.5); if (s <= 0) continue;
+      const [x, y] = proj(CITY[k][0], CITY[k][1]);
+      const col = k === 'kl' ? ORANGE : CYAN;
+      for (let r = 0; r < 2; r++) {
+        const ph = ((lt - pinT[k]) * 0.8 + r * 0.5) % 1;
+        ctx.strokeStyle = k === 'kl' ? `rgba(255,138,61,${0.6 * (1 - ph)})` : `rgba(86,212,234,${0.6 * (1 - ph)})`;
+        ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, 8 + ph * 40, 0, 7); ctx.stroke();
+      }
+      ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, 8 * s, 0, 7); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 3.5 * s, 0, 7); ctx.fill();
+      text(CITY[k][2].toUpperCase(), x + 18, y - 14, { size: 20, weight: 700, mono: true, ls: 2, alpha: clamp(s) });
+    }
+    // card panel
+    const g = ctx.createLinearGradient(0, 0, 900, 0);
+    g.addColorStop(0, 'rgba(5,6,10,0.92)'); g.addColorStop(0.75, 'rgba(5,6,10,0.6)'); g.addColorStop(1, 'rgba(5,6,10,0)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, 900, H);
+    let ci = 0; const cs = [0, 1.55, 4.05, 6.55, 9.05]; for (let i = 0; i < cs.length; i++) if (lt >= cs[i]) ci = i;
+    const st = cs[ci], cin = P(lt, st + 0.0, st + 0.45), cout = ci < 4 ? P(lt, cs[ci + 1] - 0.18, cs[ci + 1]) : 0;
+    const card = CARDS[ci], a = eOutC(cin) * (1 - cout), bl = (1 - cin) * 12 + cout * 12;
+    layer(a, bl, () => {
+      text(card.when, 110, 340, { size: 22, weight: 600, mono: true, ls: 4, color: ci === 4 ? ORANGE : CYAN });
+      text(card.org, 110, 410, { size: 50, weight: 750, ls: -0.5 });
+      text(card.role, 110, 462, { size: 30, weight: 500, color: '#d6dbe6' });
+      ctx.fillStyle = 'rgba(255,255,255,0.15)'; ctx.fillRect(110, 500, 560, 1.5);
+      card.items.forEach((it, j) => {
+        const k = rv(lt, st + 0.18 + j * 0.12, 0.4);
+        ctx.fillStyle = ci === 4 ? ORANGE : CYAN; ctx.globalAlpha = k; ctx.fillRect(112, 550 + j * 52 - 9, 8, 8); ctx.globalAlpha = 1;
+        text(it, 138, 550 + j * 52, { size: 25, weight: 450, color: '#c6ccd8', alpha: k });
+      });
+      text(card.coord, 110, 760, { size: 18, mono: true, color: DIM, ls: 2 });
+    }, 0, (1 - cin) * 18);
+    // timeline
+    const tx0 = 110, tx1 = 1810, ty = 960;
+    const ta = rv(lt, 0.4, 0.6);
+    ctx.save(); ctx.globalAlpha = ta;
+    ctx.fillStyle = 'rgba(255,255,255,0.15)'; ctx.fillRect(tx0, ty, tx1 - tx0, 2);
+    const yx = y => tx0 + (tx1 - tx0) * (y - 2019) / (2027 - 2019);
+    for (let y = 2019; y <= 2027; y++) { ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(yx(y), ty - 6, 1.5, 14); text(String(y), yx(y), ty + 36, { size: 17, mono: true, color: MUTED, align: 'center' }); }
+    let yr = YEARS[0];
+    for (let i = 0; i < 4; i++) yr = lerp(yr, YEARS[i + 2], eInOutC(P(lt, HOPS[i][2], HOPS[i][2] + 1.3)));
+    if (lt < 1.25) yr = 2019;
+    const tg = ctx.createLinearGradient(tx0, 0, tx1, 0); tg.addColorStop(0, CYAN); tg.addColorStop(0.75, ORANGE); tg.addColorStop(1, AMBER);
+    ctx.fillStyle = tg; ctx.fillRect(tx0, ty - 1, yx(yr) - tx0, 4);
+    glowDot(yx(yr), ty + 1, 6, 'rgba(255,200,150,1)');
+    ctx.restore();
+  });
+}
+
+// =====================================================================
+// SCENE 4 — RESEARCH 01: vulnerability (27.5 – 37.5)
+// =====================================================================
+function isoLayer(x, y, w, h, skew, cols, fill, label, a, lt, seed) {
+  ctx.save(); ctx.globalAlpha *= a;
+  ctx.translate(x, y); ctx.transform(1, 0.0, -skew, 0.5, 0, 0);
+  const nx = 10, ny = 10, cw = w / nx, ch = h / ny;
+  for (let i = 0; i < nx; i++) for (let j = 0; j < ny; j++) {
+    const v = fbm(i * 0.35 + seed, j * 0.35 + seed * 2, lt * 0.25 + seed);
+    ctx.fillStyle = fill(v); ctx.fillRect(i * cw + 1, j * ch + 1, cw - 2, ch - 2);
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 2; ctx.strokeRect(0, 0, w, h);
+  ctx.restore();
+  text(label, x + w + 14 - skew * h * 0.5 + 30, y + h * 0.25 + 8, { size: 19, weight: 600, color: '#cfd5e2', alpha: a });
+}
+function tree(x, y, len, ang, depth, maxD, prog, seed, leafCol) {
+  if (depth > maxD) return;
+  const grow = clamp(prog * (maxD + 1) - depth); if (grow <= 0) return;
+  const x2 = x + Math.cos(ang) * len * grow, y2 = y + Math.sin(ang) * len * grow;
+  ctx.strokeStyle = `rgba(220,226,238,${0.85 - depth * 0.12})`; ctx.lineWidth = Math.max(1, 4 - depth);
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x2, y2); ctx.stroke();
+  if (grow < 1) return;
+  if (depth === maxD) { ctx.fillStyle = leafCol(hash(seed)); ctx.beginPath(); ctx.arc(x2, y2, 6, 0, 7); ctx.fill(); return; }
+  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x2, y2, 3, 0, 7); ctx.fill();
+  const spread = 0.5 + hash(seed * 3.1) * 0.25;
+  tree(x2, y2, len * 0.72, ang - spread, depth + 1, maxD, prog, seed * 2 + 1, leafCol);
+  tree(x2, y2, len * 0.72, ang + spread, depth + 1, maxD, prog, seed * 2 + 2, leafCol);
+}
+function panelFrame(x, y, w, h, num, label, a) {
+  ctx.save(); ctx.globalAlpha *= a;
+  rrect(x, y, w, h, 18); ctx.fillStyle = 'rgba(12,14,22,0.72)'; ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.restore();
+  text(num, x + 24, y + h + 44, { size: 18, mono: true, color: ORANGE, ls: 3, alpha: a });
+  text(label, x + 70, y + h + 44, { size: 22, weight: 650, alpha: a });
+}
+function scene4(lt) {
+  const ex = P(lt, 9.55, 10);
+  layer(1 - ex, ex * 14, () => {
+    sceneHeader(lt, 'RESEARCH  01', 'Who is most vulnerable to heat?', 'A multi-scalar heat vulnerability framework for Malaysia — Random Forest + SHAP', 'Scientific Reports · 2026');
+    text('16 MALAYSIA STATES  ·  2010–2022  ·  RF R² = 0.86', 1810, 232, { size: 15, mono: true, weight: 600, color: AMBER, align: 'right', ls: 1.5, alpha: rv(lt, 0.7, 0.5) });
+    const Y = 360, PH = 520;
+    const cols = [[110, 400], [550, 380], [970, 400], [1410, 400]];
+    const titles = [['01', 'Multi-source data'], ['02', 'Random Forest'], ['03', 'SHAP explanations'], ['04', 'Vulnerability map']];
+    const starts = [0.6, 2.3, 4.1, 5.9];
+    cols.forEach(([x, w], i) => panelFrame(x, Y, w, PH, titles[i][0], titles[i][1], rv(lt, starts[i] - 0.3, 0.5)));
+    // flow connectors
+    for (let i = 0; i < 3; i++) {
+      const a = rv(lt, starts[i + 1] - 0.4, 0.4); if (a <= 0) continue;
+      const x0 = cols[i][0] + cols[i][1] + 4, x1 = cols[i + 1][0] - 4, y = Y + PH / 2;
+      ctx.save(); ctx.globalAlpha = a; ctx.strokeStyle = ORANGE; ctx.lineWidth = 2.5; ctx.setLineDash([6, 6]); ctx.lineDashOffset = -lt * 50;
+      ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1 - 8, y); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x1 - 12, y - 7); ctx.lineTo(x1 - 12, y + 7); ctx.fill(); ctx.restore();
+    }
+    // 01 layers
+    const L = [['Heat exposure', v => rgb(inferno(0.3 + v * 0.7), 0.95)], ['Sensitivity', v => rgb(cmap([[40, 20, 80], [140, 70, 190], [230, 190, 255]], v), 0.95)], ['Adaptive capacity', v => rgb(cmap([[8, 40, 50], [30, 140, 140], [150, 240, 220]], v), 0.95)]];
+    L.forEach(([lab, f], i) => {
+      const s = spring(lt - starts[0] - i * 0.22, 0.6, 0.5); if (s <= 0) return;
+      isoLayer(200, Y + 70 + i * 135 - (1 - s) * 120, 170, 170, 0.9, 10, f, lab, clamp(s * 1.5), lt, i * 3.7 + 1);
+    });
+    // 02 random forest
+    const tp = P(lt, starts[1], starts[1] + 1.6);
+    if (tp > 0) {
+      ctx.save(); ctx.beginPath(); ctx.rect(550, Y, 380, PH); ctx.clip();
+      [[650, 0.95, 3], [740, 1, 4], [830, 0.95, 3]].forEach(([x, sc, d], i) => tree(x, Y + PH - 70, 95 * sc, -Math.PI / 2, 0, d, clamp(tp * 1.15 - i * 0.08), i + 1, v => rgb(inferno(0.45 + v * 0.5))));
+      ctx.restore();
+      const va = rv(lt, starts[1] + 1.4, 0.4);
+      text('Random Forest · R² = 0.86', 740, Y + PH - 26, { size: 16, mono: true, color: MUTED, align: 'center', alpha: va });
+    }
+    // 03 SHAP beeswarm (dominant drivers from Scientific Reports 2026)
+    const feats = ['Intrinsic HVI (0.70)', 'Ozone O₃ (0.17)', 'Heat stress UTCI (0.08)', 'Fine PM₂.₅ (0.04)', 'Greenness (NDVI)'];
+    const sx = 1170, rowH = 84;
+    feats.forEach((f, r) => {
+      const ra = rv(lt, starts[2] + r * 0.1, 0.4); if (ra <= 0) return;
+      const ry = Y + 75 + r * rowH;
+      text(f, 994, ry - 22, { size: 16, weight: 550, color: '#aab2c3', alpha: ra });
+      ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(994, ry, 352, 1);
+      const spread = 136 - r * 18;
+      for (let k = 0; k < 34; k++) {
+        const v = hash(r * 100 + k), off = (v - 0.5) * 2 * spread * (0.6 + 0.4 * hash(k * 3 + r));
+        const fl = eOutC(P(lt, starts[2] + 0.2 + r * 0.1 + k * 0.012, starts[2] + 0.9 + r * 0.1 + k * 0.012));
+        const jit = (hash(k * 7.1 + r) - 0.5) * 22;
+        ctx.fillStyle = rgb(cmap([[86, 160, 255], [180, 90, 200], [255, 79, 69]], v), 0.9 * fl);
+        ctx.beginPath(); ctx.arc(sx + off * fl, ry + jit * fl, 4.5, 0, 7); ctx.fill();
+      }
+    });
+    { const a = rv(lt, starts[2] + 0.8, 0.4);
+      ctx.save(); ctx.globalAlpha = a; ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.setLineDash([4, 5]); ctx.beginPath(); ctx.moveTo(sx, Y + 30); ctx.lineTo(sx, Y + PH - 60); ctx.stroke(); ctx.restore();
+      text('← lowers risk   SHAP   raises risk →', sx, Y + PH - 26, { size: 14, mono: true, color: MUTED, align: 'center', alpha: a }); }
+    // 04 hex HVI map of Malaysia
+    const M = DOTS.MY, mlo0 = 99.3, mlo1 = 119.6, mla0 = -1.2, mla1 = 7.6;
+    const mw = 360, msc = mw / (mlo1 - mlo0), mx0 = 1430, my0 = Y + 230;
+    const hp = P(lt, starts[3], starts[3] + 1.8);
+    if (hp > 0) {
+      const cxk = mx0 + (101.69 - mlo0) * msc, cyk = my0 - (3.14 - mla0) * msc;
+      for (let i = 0; i < M.length; i += 2) {
+        const x = mx0 + (M[i] - mlo0) * msc, y = my0 - (M[i + 1] - mla0) * msc;
+        const d = Math.hypot(x - cxk, y - cyk);
+        const a = clamp(hp * 4 - d / 120); if (a <= 0) continue;
+        const v = clamp(fbm(M[i] * 0.45, M[i + 1] * 0.45, 2.0) * 1.25 - 0.15 + (d < 40 ? 0.25 : 0));
+        ctx.fillStyle = rgb(inferno(0.2 + 0.8 * v), a);
+        const r = 0.2 * msc * 0.62 * (0.4 + 0.6 * eOutC(a));
+        ctx.beginPath(); for (let k = 0; k < 6; k++) { const an = Math.PI / 6 + k * Math.PI / 3; ctx.lineTo(x + Math.cos(an) * r, y + Math.sin(an) * r); } ctx.fill();
+      }
+      const la = rv(lt, starts[3] + 1.2, 0.5);
+      text('Peninsular', 1440, my0 + 26, { size: 15, mono: true, color: MUTED, alpha: la });
+      text('Sabah & Sarawak', 1650, my0 - 150, { size: 15, mono: true, color: MUTED, alpha: la });
+      const lg = ctx.createLinearGradient(1440, 0, 1780, 0); for (let k = 0; k <= 6; k++) lg.addColorStop(k / 6, rgb(inferno(0.2 + 0.8 * k / 6)));
+      ctx.save(); ctx.globalAlpha = la; ctx.fillStyle = lg; ctx.fillRect(1440, Y + 400, 340, 10); ctx.restore();
+      text('LOW', 1440, Y + 440, { size: 14, mono: true, color: MUTED, alpha: la });
+      text('HEAT VULNERABILITY INDEX', 1610, Y + 440, { size: 14, mono: true, color: MUTED, align: 'center', alpha: la });
+      text('HIGH', 1780, Y + 440, { size: 14, mono: true, color: MUTED, align: 'right', alpha: la });
+    }
+  });
+}
+
+// =====================================================================
+// SCENE 5 — RESEARCH 02: early warning + CMIP6 (37.5 – 47.5)
+// =====================================================================
+const H0 = 0.42;
+function hist(y) { const d = y - 2000; return 0.24 + 0.0072 * d + 0.03 * Math.sin(d * 1.15) + 0.014 * Math.sin(d * 2.7 + 1) - 0.03 * Math.sin(Math.PI * d / 25); }
+const SSP = [
+  { name: 'SSP1-2.6', col: [86, 212, 234], f: d => H0 + 0.14 * (1 - Math.exp(-d / 28)), sp: 0.035 },
+  { name: 'SSP2-4.5', col: [252, 179, 58], f: d => H0 + 0.0042 * d + 0.000006 * d * d, sp: 0.05 },
+  { name: 'SSP5-8.5', col: [255, 79, 69], f: d => H0 + 0.0035 * d + 0.000048 * d * d, sp: 0.07 },
+];
+const THR = 0.68;
+function scene5(lt) {
+  const ex = P(lt, 9.55, 10);
+  layer(1 - ex, ex * 14, () => {
+    sceneHeader(lt, 'RESEARCH  02', 'When will heat risk escalate?', 'Machine-learning early warning for urban heat risk, coupled with CMIP6 projections', 'Journal of Environmental Management · 2026');
+    text('ARIZONA PILOT  ·  HOLD-OUT R² = 0.53  ·  TS-CV R² = 0.52', 1810, 232, { size: 15, mono: true, weight: 600, color: CYAN, align: 'right', ls: 1.5, alpha: rv(lt, 0.7, 0.5) });
+    const X0 = 190, X1 = 1220, Y0 = 880, Y1 = 380;
+    const xs = y => X0 + (X1 - X0) * (y - 2000) / 100, ys = v => Y0 - (Y0 - Y1) * (v - 0.1) / 0.95;
+    const ax = rv(lt, 0.6, 0.6);
+    ctx.save(); ctx.globalAlpha = ax;
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(X0, Y1 - 20); ctx.lineTo(X0, Y0); ctx.lineTo(X1 + 20, Y0); ctx.stroke();
+    for (let y = 2000; y <= 2100; y += 20) { ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fillRect(xs(y), Y0, 1.5, 8); text(String(y), xs(y), Y0 + 34, { size: 17, mono: true, color: MUTED, align: 'center' }); }
+    ctx.restore();
+    text('HEAT-RISK INDEX  (illustrative CMIP6 trajectories)', X0, Y1 - 36, { size: 15, mono: true, color: MUTED, ls: 2, alpha: ax });
+    // threshold
+    const ta = eInOutC(P(lt, 3.0, 3.8));
+    if (ta > 0) {
+      ctx.save(); ctx.strokeStyle = 'rgba(255,79,69,0.8)'; ctx.setLineDash([10, 8]); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(X0, ys(THR)); ctx.lineTo(X0 + (X1 - X0) * ta, ys(THR)); ctx.stroke(); ctx.restore();
+      text('WARNING THRESHOLD', X0 + 14, ys(THR) - 12, { size: 15, mono: true, color: '#ff8a80', ls: 2, alpha: P(lt, 3.4, 3.9) });
+    }
+    // history
+    const hp = eInOutC(P(lt, 0.9, 2.3));
+    if (hp > 0) {
+      ctx.save(); ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.beginPath();
+      for (let y = 2000; y <= 2000 + 25 * hp; y += 0.25) { const X = xs(y), Yv = ys(hist(y)); y === 2000 ? ctx.moveTo(X, Yv) : ctx.lineTo(X, Yv); }
+      ctx.stroke(); ctx.restore();
+      if (hp >= 1) {
+        const na = P(lt, 2.2, 2.6);
+        ctx.save(); ctx.globalAlpha = na; ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.setLineDash([3, 5]); ctx.beginPath(); ctx.moveTo(xs(2025), Y1 - 10); ctx.lineTo(xs(2025), Y0); ctx.stroke(); ctx.restore();
+        text('TODAY', xs(2025) + 10, Y1 + 6, { size: 15, mono: true, color: INK, alpha: na, ls: 2 });
+        text('OBSERVED', xs(2025) - 12, Y0 - 18, { size: 15, mono: true, color: MUTED, align: 'right', alpha: na, ls: 2 });
+        text('CMIP6 PROJECTIONS →', xs(2025) + 12, Y0 - 18, { size: 15, mono: true, color: MUTED, alpha: na, ls: 2 });
+      }
+    }
+    // SSP fans
+    SSP.forEach((s, i) => {
+      const p = eInOutC(P(lt, 2.6 + i * 0.35, 5.4 + i * 0.35)); if (p <= 0) return;
+      const yEnd = 2025 + 75 * p;
+      ctx.save(); ctx.beginPath();
+      for (let y = 2025; y <= yEnd; y += 0.5) { const d = y - 2025; ctx.lineTo(xs(y), ys(s.f(d) + s.sp * d / 75 + 0.004)); }
+      for (let y = yEnd; y >= 2025; y -= 0.5) { const d = y - 2025; ctx.lineTo(xs(y), ys(s.f(d) - s.sp * d / 75 - 0.004)); }
+      ctx.fillStyle = rgb(s.col, 0.16); ctx.fill();
+      ctx.beginPath(); for (let y = 2025; y <= yEnd; y += 0.5) { const X = xs(y), Yv = ys(s.f(y - 2025)); y === 2025 ? ctx.moveTo(X, Yv) : ctx.lineTo(X, Yv); }
+      ctx.strokeStyle = rgb(s.col); ctx.lineWidth = 3; ctx.stroke(); ctx.restore();
+      if (p > 0.02 && p < 1) glowDot(xs(yEnd), ys(s.f(yEnd - 2025)), 5, rgb(s.col, 1));
+      if (p >= 1) text(s.name, X1 + 18, ys(s.f(75)) + 6, { size: 17, mono: true, weight: 600, color: rgb(s.col), alpha: P(lt, 5.4 + i * 0.35, 5.8 + i * 0.35) });
+      // threshold crossing alert (place SSP5-8.5 above threshold to avoid orange curve collision)
+      let cross = null; for (let d = 0; d <= 75; d += 0.25) if (s.f(d) >= THR) { cross = d; break; }
+      if (cross !== null && yEnd >= 2025 + cross) {
+        const ct = 2.6 + i * 0.35 + 2.8 * (cross / 75);    // approx time of crossing
+        const X = xs(2025 + cross), Yv = ys(THR);
+        const ph = (((lt - ct) * 1.2) % 1 + 1) % 1;
+        ctx.strokeStyle = rgb(s.col, 0.8 * (1 - ph)); ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(X, Yv, 6 + ph * 30, 0, 7); ctx.stroke();
+        ctx.fillStyle = rgb(s.col); ctx.beginPath(); ctx.arc(X, Yv, 6, 0, 7); ctx.fill();
+        const labA = P(lt, ct, ct + 0.3);
+        const lab = '~' + Math.round(2025 + cross);
+        const ly = i === 2 ? Yv - 30 : Yv + 34;
+        ctx.save(); ctx.globalAlpha *= labA;
+        rrect(X - 34, ly - 17, 68, 24, 6);
+        ctx.fillStyle = 'rgba(7,9,16,0.88)'; ctx.fill();
+        ctx.strokeStyle = rgb(s.col, 0.5); ctx.lineWidth = 1; ctx.stroke();
+        ctx.restore();
+        text(lab, X, ly, { size: 15, mono: true, weight: 700, color: rgb(s.col), align: 'center', alpha: labA });
+      }
+    });
+    // early warning gauge
+    const gx = 1540, gy = 640, gr = 190;
+    const ga = rv(lt, 1.2, 0.6);
+    const levels = [['NORMAL', [86, 212, 234]], ['WATCH', [252, 220, 90]], ['WARNING', [255, 138, 61]], ['EMERGENCY', [255, 60, 60]]];
+    layer(ga, (1 - ga) * 10, () => {
+      text('EARLY-WARNING LEVEL', gx, gy - gr - 60, { size: 18, mono: true, color: MUTED, align: 'center', ls: 3 });
+      levels.forEach(([lab, c], i) => {
+        const a0 = Math.PI + i * Math.PI / 4 + 0.03, a1 = Math.PI + (i + 1) * Math.PI / 4 - 0.03;
+        ctx.strokeStyle = rgb(c, 0.9); ctx.lineWidth = 26; ctx.beginPath(); ctx.arc(gx, gy, gr, a0, a1); ctx.stroke();
+        const am = (a0 + a1) / 2;
+        ctx.save(); ctx.translate(gx + Math.cos(am) * (gr + 44), gy + Math.sin(am) * (gr + 44)); ctx.rotate(am + Math.PI / 2);
+        text(lab, 0, 0, { size: 14, mono: true, weight: 700, color: rgb(c), align: 'center', base: 'middle', ls: 1 }); ctx.restore();
+      });
+      // needle — spring between targets
+      const targets = [[0, 0.06], [3.6, 0.36], [4.6, 0.6], [5.6, 0.88], [6.5, 0.66]];
+      let v = targets[0][1];
+      for (let i = 1; i < targets.length; i++) v += (targets[i][1] - targets[i - 1][1]) * spring(lt - targets[i][0], 0.55, 0.6);
+      const an = Math.PI + v * Math.PI;
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(gx + Math.cos(an) * (gr - 30), gy + Math.sin(an) * (gr - 30)); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(gx, gy, 12, 0, 7); ctx.fill();
+      const li = Math.min(3, Math.floor(v * 4));
+      text(levels[li][0], gx, gy + 70, { size: 40, weight: 800, color: rgb(levels[li][1]), align: 'center', ls: 3 });
+    });
+    const methods = ['Hold-out R² = 0.53 · TS-CV = 0.52', '10-model CMIP6 ensemble', '4-tier operational alert scale'];
+    methods.forEach((m, i) => {
+      const s = spring(lt - 6.6 - i * 0.15, 0.6, 0.45); if (s <= 0) return;
+      layer(clamp(s * 1.5), 0, () => chip(m, gx, 800 + i * 54, { center: true, size: 19, stroke: 'rgba(255,255,255,0.3)' }), 0, (1 - s) * 30, 1, gx, 800 + i * 54);
+    });
+  });
+}
+
+// =====================================================================
+// SCENE 6 — PUBLICATIONS (47.5 – 57.5)
+// =====================================================================
+const PUBS = [
+  { j: 'Journal of Environmental Management', y: '2026', t: 'Machine learning early warning for urban heat risk with CMIP6 projections', q: 'Q1', first: true },
+  { j: 'Scientific Reports', y: '2026', t: 'Multi-scalar risk drivers for a heat vulnerability assessment framework using machine learning', q: 'Q1', first: true },
+  { j: 'npj Climate and Atmospheric Science', y: '2026 · accepted', t: 'Monthly hydroclimatic associations in sampled natural dryland vegetation', q: 'Q1', first: true },
+  { j: 'Transport Policy', y: '2027', t: 'When politics meet wheels: consumer sentiment, geopolitical risks & household transport', q: 'Q1', first: false },
+  { j: 'Int. J. Sustainability in Higher Education', y: '2026', t: 'Dynamic spillovers between ESG green bonds and AI equity indices', q: 'Q1', first: true },
+  { j: 'Int. J. Climate Change Strategies & Management', y: '2026', t: 'Climate stress, energy shocks and carbon-market connectedness in the EU ETS', q: 'Q2', first: true },
+  { j: 'Air Quality, Atmosphere & Health', y: '2026', t: 'Systematic review of compound-event generation within early warning system frameworks', q: 'Q3', first: true },
+  { j: 'Finance Research Letters', y: '2026', t: 'Dependence in cryptocurrencies: a partial correlation connectedness approach', q: 'Q1', first: false },
+  { j: 'SAGE Open', y: '2021', t: 'Modeling economic risk in the QISMUT countries: nonlinear cointegration evidence', q: 'Q1', first: false },
+  { j: 'Environmental Science & Pollution Research', y: '2021', t: 'Modeling CO₂ emissions in Malaysia: Maki cointegration and wavelet coherence', q: 'Q2', first: false },
+];
+function pubCard(p, x, y, s, alpha, front) {
+  const w = 520, h = 270;
+  ctx.save(); ctx.globalAlpha *= alpha; ctx.translate(x, y); ctx.scale(s, s);
+  if (front > 0.2) {
+    rrect(-w / 2 - 6, -h / 2 - 4, w + 12, h + 14, 24);
+    ctx.fillStyle = `rgba(0,0,0,${0.5 * front})`; ctx.fill();
+    rrect(-w / 2 - 2, -h / 2 - 2, w + 4, h + 4, 22);
+    ctx.strokeStyle = `rgba(255,138,61,${0.18 * front})`; ctx.lineWidth = 4; ctx.stroke();
+  }
+  rrect(-w / 2, -h / 2, w, h, 20);
+  const g = ctx.createLinearGradient(0, -h / 2, 0, h / 2); g.addColorStop(0, 'rgb(24,26,38)'); g.addColorStop(1, 'rgb(11,12,20)');
+  ctx.fillStyle = g; ctx.fill();
+  ctx.lineWidth = front ? 2.4 : 1.2; ctx.strokeStyle = front ? `rgba(255,138,61,${0.4 + 0.6 * front})` : 'rgba(255,255,255,0.16)'; ctx.stroke();
+  ctx.fillStyle = rgb(inferno(0.45 + 0.4 * hash(p.j.length)), 1); ctx.fillRect(-w / 2 + 28, -h / 2 + 30, 36, 4);
+  text(p.y.toUpperCase(), w / 2 - 28, -h / 2 + 38, { size: 15, mono: true, color: MUTED, align: 'right', ls: 2 });
+  const jl = wrap(p.j, w - 56, 27, 750);
+  jl.slice(0, 2).forEach((l, i) => text(l, -w / 2 + 28, -h / 2 + 82 + i * 33, { size: 27, weight: 750 }));
+  const tl = wrap(p.t, w - 56, 19, 450);
+  const ty0 = -h / 2 + 82 + jl.slice(0, 2).length * 33 + 8;
+  tl.slice(0, 3).forEach((l, i) => text(l, -w / 2 + 28, ty0 + i * 26, { size: 19, weight: 450, color: '#a9b1c2' }));
+  let cx = -w / 2 + 28;
+  cx += chip('JCR ' + p.q, cx, h / 2 - 32, { size: 14, mono: true, h: 28, padX: 12, stroke: p.q === 'Q1' ? 'rgba(252,179,58,0.9)' : 'rgba(255,255,255,0.3)', color: p.q === 'Q1' ? AMBER : INK }) + 10;
+  if (p.first) chip('FIRST AUTHOR', cx, h / 2 - 32, { size: 14, mono: true, h: 28, padX: 12, stroke: 'rgba(86,212,234,0.8)', color: CYAN });
+  ctx.restore();
+}
+function rollNumber(n, x, y, size, lt, t0, col) {
+  const k = eOutC(P(lt, t0, t0 + 1.3));
+  const v = n * k, a = Math.floor(v), f = eInOutS(v - a);
+  ctx.save(); ctx.beginPath(); ctx.rect(x - size, y - size * 0.95, size * 2, size * 1.15); ctx.clip();
+  text(String(Math.min(n, a)), x, y - f * size * 1.05, { size, weight: 800, align: 'center', color: col });
+  if (a < n) text(String(a + 1), x, y + (1 - f) * size * 1.05, { size, weight: 800, align: 'center', color: col });
+  ctx.restore();
+}
+const tickC = document.createElement('canvas'); tickC.width = 1560; tickC.height = 60;
+const tctx = tickC.getContext('2d');
+function scene6(lt) {
+  const ex = P(lt, 9.55, 10);
+  layer(1 - ex, ex * 14, () => {
+    const ha = rv(lt, 0, 0.5);
+    text('PUBLICATIONS', W / 2, 170, { size: 22, mono: true, weight: 600, color: ORANGE, ls: 6, align: 'center', alpha: ha, blur: (1 - ha) * 10 });
+    const stats = [[10, 'peer-reviewed papers', INK], [6, 'as first author', CYAN], [7, 'in JCR Q1 journals', AMBER], [4, 'manuscripts under review', '#d9b8ff']];
+    stats.forEach(([n, lab, c], i) => {
+      const x = 360 + i * 400, a = rv(lt, 0.15 + i * 0.12, 0.45);
+      layer(a, (1 - a) * 10, () => {
+        rollNumber(n, x, 300, 96, lt, 0.2 + i * 0.12, c);
+        text(lab.toUpperCase(), x, 345, { size: 16, mono: true, color: MUTED, align: 'center', ls: 2 });
+      });
+      if (i) { ctx.fillStyle = `rgba(255,255,255,${0.12 * a})`; ctx.fillRect(x - 200, 230, 1, 120); }
+    });
+    // 3D Cover-Flow carousel (cleanly fades back-half cards to prevent ghost overlap)
+    const ca = P(lt, 1.3, 2.2);
+    const rot = -0.22 + eInOutS(P(lt, 1.3, 9.6)) * 5.4;
+    const items = PUBS.map((p, i) => {
+      const th = i * (2 * Math.PI / PUBS.length) - rot;
+      return { p, i, x: W / 2 + Math.sin(th) * 880, z: Math.cos(th) };
+    }).sort((a, b) => a.z - b.z);
+    let activeIdx = 0, bestZ = -2;
+    items.forEach(({ p, i, x, z }) => {
+      if (z > bestZ) { bestZ = z; activeIdx = i; }
+      if (z < -0.15) return;
+      const s = 0.64 + 0.36 * clamp((z + 0.15) / 1.15), front = clamp((z - 0.84) / 0.16);
+      const appear = eOutC(P(lt, 1.3 + i * 0.05, 2.05 + i * 0.05));
+      const depthA = Math.pow(clamp((z + 0.15) / 1.15), 1.55);
+      const a = ca * appear * depthA;
+      if (a <= 0.02) return;
+      pubCard(p, x, 646 - z * 24 + (1 - appear) * 75, s * (1 + front * 0.05), a, front);
+    });
+    // Minimal 10-dot spotlight progress indicator
+    const da = rv(lt, 1.8, 0.5);
+    if (da > 0) {
+      const dGap = 18, dTot = (PUBS.length - 1) * dGap, dx0 = W / 2 - dTot / 2;
+      for (let i = 0; i < PUBS.length; i++) {
+        const isAct = i === activeIdx;
+        ctx.fillStyle = isAct ? ORANGE : `rgba(255,255,255,${0.22 * da})`;
+        ctx.beginPath(); ctx.arc(dx0 + i * dGap, 845, isAct ? 4.2 : 2.6, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    // under-review ticker with soft alpha fade mask (zero background box darkening)
+    const ua = rv(lt, 2.4, 0.6);
+    text('IN REVIEW', 110, 960, { size: 16, mono: true, weight: 700, color: '#d9b8ff', ls: 3, alpha: ua });
+    if (ua > 0.004) {
+      const tick = 'Climate Services — major revision   ·   npj Urban Sustainability   ·   Journal of Infrastructure Systems   ·   Environmental Development   ·   ';
+      const tw = measure(tick, 20, 450, true);
+      const off = -((lt * 70) % tw);
+      tctx.save();
+      tctx.globalCompositeOperation = 'source-over';
+      tctx.clearRect(0, 0, 1560, 60);
+      tctx.font = font(20, 450, MONO);
+      tctx.fillStyle = '#b7bdcc';
+      tctx.textAlign = 'left';
+      tctx.textBaseline = 'alphabetic';
+      tctx.globalAlpha = ua;
+      for (let k = 0; k < 3; k++) tctx.fillText(tick, 10 + off + k * tw, 40);
+      tctx.globalAlpha = 1;
+      tctx.globalCompositeOperation = 'destination-in';
+      const mg = tctx.createLinearGradient(0, 0, 1560, 0);
+      mg.addColorStop(0, 'rgba(0,0,0,0)');
+      mg.addColorStop(0.06, 'rgba(0,0,0,1)');
+      mg.addColorStop(0.94, 'rgba(0,0,0,1)');
+      mg.addColorStop(1, 'rgba(0,0,0,0)');
+      tctx.fillStyle = mg;
+      tctx.fillRect(0, 0, 1560, 60);
+      tctx.restore();
+      ctx.drawImage(tickC, 250, 920);
+    }
+  });
+}
+
+// =====================================================================
+// SCENE 7 — SERVICE & TOOLKIT (57.5 – 67.5)
+// =====================================================================
+function globe(cx, cy, R, rotA, alpha, lt) {
+  ctx.save(); ctx.globalAlpha *= alpha;
+  const g = ctx.createRadialGradient(cx - R * 0.3, cy - R * 0.3, R * 0.1, cx, cy, R * 1.1);
+  g.addColorStop(0, 'rgba(60,70,110,0.35)'); g.addColorStop(1, 'rgba(10,12,20,0.0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R * 1.1, 0, 7); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.stroke();
+  const D = DOTS.GL, tilt = 0.32;
+  for (let i = 0; i < D.length; i += 2) {
+    const lo = D[i] * Math.PI / 180 + rotA, la = D[i + 1] * Math.PI / 180;
+    let x = Math.cos(la) * Math.sin(lo), y = Math.sin(la), z = Math.cos(la) * Math.cos(lo);
+    const y2 = y * Math.cos(tilt) - z * Math.sin(tilt), z2 = y * Math.sin(tilt) + z * Math.cos(tilt);
+    if (z2 < -0.05) continue;
+    const heat = clamp(1 - Math.abs(D[i + 1]) / 40) * (0.5 + 0.5 * vnoise(D[i] * 0.08, D[i + 1] * 0.08, lt * 0.4));
+    const c = heat > 0.35 ? inferno(0.4 + heat * 0.55) : [150, 165, 200];
+    ctx.fillStyle = rgb(c, 0.25 + 0.75 * z2);
+    const r = 1.6 + 2.2 * z2;
+    ctx.fillRect(cx + x * R - r / 2, cy - y2 * R - r / 2, r, r);
+  }
+  ctx.restore();
+}
+const SKILL_RINGS = [
+  { items: ['Python', 'PyTorch', 'R / RStudio', 'SQL', 'Random Forest', 'SHAP'], rX: 335, rY: 54, yOff: -116, tilt: -0.11, spd: 0.28, ph0: 0.25 },
+  { items: ['CMIP6', 'Time-series CV', 'Remote sensing', 'Tableau', 'C / C++', 'Java', 'GitHub'], rX: 365, rY: 62, yOff: 118, tilt: 0.10, spd: -0.24, ph0: 0.72 },
+];
+function scene7(lt) {
+  const ex = P(lt, 9.55, 10);
+  layer(1 - ex, ex * 14, () => {
+    const mv = eInOutC(P(lt, 2.3, 3.3));
+    const gcx = lerp(W / 2, 1375, mv), gcy = lerp(560, 565, mv), gR = lerp(330, 232, mv);
+    const ga = rv(lt, 0, 0.8);
+    // dual non-colliding tilted 3D orbits
+    const oa = rv(lt, 3.0, 0.7);
+    const orbit = [];
+    let gi = 0;
+    SKILL_RINGS.forEach((rg, ri) => {
+      rg.items.forEach((s, idx) => {
+        const th = (idx / rg.items.length) * Math.PI * 2 + lt * rg.spd + rg.ph0;
+        const ux = Math.cos(th) * rg.rX, uz = Math.sin(th);
+        const uy = uz * rg.rY;
+        const rx = ux * Math.cos(rg.tilt) - uy * Math.sin(rg.tilt);
+        const ry = ux * Math.sin(rg.tilt) + uy * Math.cos(rg.tilt) + rg.yOff;
+        orbit.push({ s, i: gi++, ox: gcx + rx, oy: gcy + ry, z: uz, ri });
+      });
+    });
+    orbit.sort((a, b) => a.z - b.z);
+    const drawTracks = (front) => {
+      if (oa <= 0) return;
+      SKILL_RINGS.forEach(rg => {
+        ctx.save(); ctx.globalAlpha *= oa;
+        ctx.translate(gcx, gcy + rg.yOff); ctx.rotate(rg.tilt);
+        ctx.strokeStyle = front ? 'rgba(255,138,61,0.16)' : 'rgba(255,255,255,0.06)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rg.rX, rg.rY, 0, front ? 0 : Math.PI, front ? Math.PI : Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      });
+    };
+    const drawOrbit = (front) => orbit.forEach(({ s, i, ox, oy, z }) => {
+      if ((z >= 0) !== front) return;
+      const app = spring(lt - 3.0 - i * 0.055, 0.6, 0.5); if (app <= 0) return;
+      const sc = front ? (0.88 + 0.16 * z) : (0.72 + 0.12 * (z + 1));
+      const alp = front ? (0.86 + 0.14 * z) : (0.20 + 0.20 * (z + 1));
+      layer(oa * clamp(app * 1.5) * alp, 0, () => chip(s, ox, oy, {
+        center: true, size: 19, mono: true, weight: 600, padX: 18, h: 38,
+        fill: front ? 'rgba(10,12,20,0.96)' : 'rgba(10,12,20,0.72)',
+        stroke: front ? 'rgba(255,138,61,0.76)' : 'rgba(255,255,255,0.22)',
+      }), 0, 0, sc * app, ox, oy);
+    });
+    drawTracks(false);
+    drawOrbit(false);
+    globe(gcx, gcy, gR, -1.9 + lt * 0.22, ga, lt);
+    drawTracks(true);
+    drawOrbit(true);
+    // IPCC hero → heading
+    const hx = lerp(W / 2, 110, mv), hy = lerp(560, 270, mv), hs = lerp(1, 0.48, mv);
+    const k1 = spring(lt - 0.15, 0.7, 0.6);
+    ctx.save(); ctx.translate(hx, hy); ctx.scale(hs, hs);
+    const ia = clamp(k1 * 1.3);
+    text('EXPERT REVIEWER', 0, -150, { size: 30, mono: true, weight: 600, color: ORANGE, ls: 8, align: mv > 0.5 ? 'left' : 'center', alpha: ia * (mv > 0.5 ? (mv - 0.5) * 2 : 1 - mv * 2) });
+    text('IPCC  AR7', 0, 0 + (1 - k1) * 60, { size: 170, weight: 850, align: mv > 0.5 ? 'left' : 'center', ls: 4, alpha: mv > 0.5 ? ia * (mv - 0.5) * 2 : ia * (1 - mv * 2), blur: (1 - ia) * 14 });
+    text('Seventh Assessment Report  ·  Chapter 4  ·  2026', 0, 80, { size: 34, weight: 500, color: '#d6dbe6', align: mv > 0.5 ? 'left' : 'center', alpha: rv(lt, 0.5, 0.5) * Math.abs(1 - mv * 2) });
+    ctx.restore();
+    // list
+    const rows = [
+      ['Peer reviewer', 'Environmental Research Letters · Scientific Reports · BMC Public Health · Discover Cities · J. Chinese Economic & Foreign Trade Studies'],
+      ['ACTION Climate-Health Innovation Challenge', 'Team Spirit — Top 50 after first-round concept submission'],
+      ['Best Presentation Award · Third Prize', 'SCCC / IEMLS conference'],
+      ['Languages', 'English (fluent)  ·  Chinese (native)'],
+    ];
+    rows.forEach(([h, s], i) => {
+      const a = rv(lt, 3.2 + i * 0.25, 0.5); if (a <= 0) return;
+      const y = 400 + i * 135;
+      layer(a, (1 - a) * 10, () => {
+        ctx.fillStyle = ORANGE; ctx.beginPath(); ctx.arc(122, y - 9, 6, 0, 7); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.fillRect(121, y + 6, 2, 100);
+        text(h, 150, y, { size: 30, weight: 700 });
+        wrap(s, 720, 21, 450).forEach((l, j) => text(l, 150, y + 38 + j * 28, { size: 21, weight: 450, color: '#aab2c3' }));
+      }, (1 - a) * -30, 0);
+    });
+    text('TOOLKIT', 1375, 925, { size: 16, mono: true, color: MUTED, ls: 4, align: 'center', alpha: oa });
+  });
+}
+
+// =====================================================================
+// SCENE 8 — IMPACT & CONTACT (67.5 – 80)
+// =====================================================================
+const SPOTS = {
+  my: { lo: 101.7, la: 3.1, t0: 0.30, col: [255, 138, 61], title: 'MALAYSIA & SE ASIA', sub: 'Heat Vulnerability · Sci. Rep.', dx: 22, dy: 16, align: 'left' },
+  us: { lo: -111.9, la: 33.4, t0: 0.80, col: [252, 179, 58], title: 'UNITED STATES', sub: 'ML Early Warning · NO₂', dx: -24, dy: -18, align: 'right' },
+  eu: { lo: 10.4, la: 51.2, t0: 1.25, col: [86, 212, 234], title: 'EUROPE (EU ETS)', sub: 'Climate & Carbon Risk', dx: -22, dy: -22, align: 'right' },
+  br: { lo: -47.9, la: -15.8, t0: 1.70, col: [255, 138, 61], title: 'BRAZIL', sub: 'Heat-Health Warning', dx: 22, dy: 4, align: 'left' },
+  dry: { lo: 65.0, la: 41.0, t0: 2.15, col: [252, 179, 58], title: 'GLOBAL DRYLANDS', sub: 'Hydroclimate · npj', dx: 22, dy: -16, align: 'left' },
+};
+const FOOTPRINT_ARCS = [
+  ['my', 'dry', 0.55, 0.16],
+  ['dry', 'eu', 1.05, 0.16],
+  ['eu', 'us', 1.45, 0.16],
+  ['us', 'br', 1.90, -0.16],
+  ['my', 'eu', 1.65, -0.14],
+];
+const PILLARS = [
+  ['01  OBSERVE', 'Multi-source climate data', 'Satellite, station & CMIP6 ensembles', CYAN, [86, 212, 234]],
+  ['02  PREDICT', 'Interpretable AI & warning', 'Random Forest, SHAP & compound extremes', ORANGE, [255, 138, 61]],
+  ['03  PROTECT', 'Cities, health & policy', 'Actionable early warning for communities', AMBER, [252, 179, 58]],
+];
+
+function scene8(lt) {
+  // Act A: Global Research Footprint & 3-Pillar Synthesis (0.0 – 5.1)
+  const ax = P(lt, 4.55, 5.1);
+  if (lt < 5.15) {
+    const ae = eInOutC(ax);
+    layer(1 - ae, ax * 14, () => {
+      const h1 = rv(lt, 0.0, 0.45), h2 = rv(lt, 0.12, 0.5);
+      text('GLOBAL RESEARCH FOOTPRINT', 110, 165, { size: 20, mono: true, weight: 600, color: ORANGE, ls: 4, alpha: h1, blur: (1 - h1) * 10 });
+      text('From local signals to global resilience', 110 + (1 - h2) * -26, 224, { size: 54, weight: 750, ls: -1, alpha: h2, blur: (1 - h2) * 12 });
+
+      // World dot-matrix map (DOTS.GL in equirectangular projection)
+      const mx0 = 160, mw = 1600, my0 = 260, mh = 475;
+      const projW = (lo, la) => [mx0 + ((lo + 180) / 360) * mw, my0 + ((80 - la) / 138) * mh];
+      const mapIn = P(lt, 0.0, 1.4);
+      const D = DOTS.GL;
+      const hotPts = [[101.7, 3.1], [-111.9, 33.4], [10.4, 51.2], [-47.9, -15.8], [65.0, 41.0]];
+      for (let i = 0; i < D.length; i += 2) {
+        const lo = D[i], la = D[i + 1];
+        const [x, y] = projW(lo, la);
+        const dd = Math.hypot((lo - 101.7) * 0.65, la - 3.1);
+        const a = clamp(mapIn * 2.4 - dd / 140);
+        if (a <= 0) continue;
+        let minD = 999;
+        for (let k = 0; k < hotPts.length; k++) {
+          const d = Math.hypot((lo - hotPts[k][0]) * 0.75, la - hotPts[k][1]);
+          if (d < minD) minD = d;
+        }
+        const regionHeat = clamp(1 - minD / 30);
+        const tropHeat = clamp(1 - Math.abs(la) / 32) * 0.42;
+        const n = fbm(lo * 0.05, la * 0.05, lt * 0.35);
+        const heat = clamp(regionHeat * (0.65 + 0.35 * n) + tropHeat * n);
+        const col = heat > 0.24 ? inferno(0.32 + 0.65 * heat) : [120, 136, 168];
+        const al = lerp(0.38, 0.92, heat) * a;
+        const sz = lerp(3.4, 4.6, heat);
+        ctx.fillStyle = rgb(col, al);
+        ctx.fillRect(x - sz / 2, y - sz / 2, sz, sz);
+      }
+
+      // Great-circle-style Bezier arcs linking research regions
+      FOOTPRINT_ARCS.forEach(([ka, kb, s, bendCoef]) => {
+        const p = eInOutC(P(lt, s, s + 1.05)); if (p <= 0) return;
+        const A = projW(SPOTS[ka].lo, SPOTS[ka].la), B = projW(SPOTS[kb].lo, SPOTS[kb].la);
+        const mxp = (A[0] + B[0]) / 2, myp = (A[1] + B[1]) / 2, L = Math.hypot(B[0] - A[0], B[1] - A[1]);
+        const nx = -(B[1] - A[1]) / L, ny = (B[0] - A[0]) / L, bend = L * bendCoef;
+        const C = [mxp + nx * bend, myp + ny * bend];
+        const q = u => [(1 - u) * (1 - u) * A[0] + 2 * (1 - u) * u * C[0] + u * u * B[0], (1 - u) * (1 - u) * A[1] + 2 * (1 - u) * u * C[1] + u * u * B[1]];
+        ctx.save();
+        ctx.lineWidth = 2.4;
+        ctx.strokeStyle = ka === 'my' ? 'rgba(255,138,61,0.72)' : 'rgba(86,212,234,0.68)';
+        ctx.setLineDash([8, 7]); ctx.lineDashOffset = -lt * 36;
+        ctx.beginPath();
+        const steps = 48;
+        for (let k = 0; k <= steps * p; k++) { const pt = q(k / steps); k ? ctx.lineTo(pt[0], pt[1]) : ctx.moveTo(pt[0], pt[1]); }
+        ctx.stroke();
+        ctx.restore();
+        if (p < 1) { const h = q(p); glowDot(h[0], h[1], 5.5, ka === 'my' ? 'rgba(255,138,61,1)' : 'rgba(86,212,234,1)'); }
+      });
+
+      // 5 Research Hotspots
+      for (const k in SPOTS) {
+        const sp = SPOTS[k];
+        const s = spring(lt - sp.t0, 0.55, 0.5); if (s <= 0) continue;
+        const [x, y] = projW(sp.lo, sp.la);
+        for (let r = 0; r < 2; r++) {
+          const ph = (((lt - sp.t0) * 0.75 + r * 0.5) % 1 + 1) % 1;
+          ctx.save();
+          ctx.strokeStyle = rgb(sp.col, 0.58 * (1 - ph));
+          ctx.lineWidth = 1.8;
+          ctx.beginPath(); ctx.arc(x, y, 7 + ph * 30, 0, 7); ctx.stroke();
+          ctx.restore();
+        }
+        ctx.fillStyle = rgb(sp.col); ctx.beginPath(); ctx.arc(x, y, 6.5 * s, 0, 7); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 2.8 * s, 0, 7); ctx.fill();
+        const la = clamp(s * 1.2);
+        const tw1 = measure(sp.title, 15, 700, true, 1.5), tw2 = measure(sp.sub, 14, 500, false, 0);
+        const bw = Math.max(tw1, tw2) + 22, bh = 46;
+        const lx = x + sp.dx, ly = y + sp.dy;
+        const bx = sp.align === 'right' ? lx - bw + 11 : lx - 11;
+        const by = ly - 17;
+        ctx.save(); ctx.globalAlpha *= la;
+        rrect(bx, by, bw, bh, 8);
+        ctx.fillStyle = 'rgba(6,8,14,0.80)'; ctx.fill();
+        ctx.strokeStyle = rgb(sp.col, 0.30); ctx.lineWidth = 1; ctx.stroke();
+        ctx.restore();
+        text(sp.title, lx, ly, { size: 15, mono: true, weight: 700, ls: 1.5, align: sp.align, color: INK, alpha: la });
+        text(sp.sub, lx, ly + 19, { size: 14, weight: 500, align: sp.align, color: '#b7c0d2', alpha: la });
+      }
+
+      // 3-Pillar Synthesis Cards
+      const cw = 548, ch = 165, cy = 775, gap = 28;
+      PILLARS.forEach(([tag, title, desc, hex, c], i) => {
+        const s = spring(lt - (2.45 + i * 0.27), 0.65, 0.52); if (s <= 0) return;
+        const cx0 = 110 + i * (cw + gap);
+        const a = clamp(s * 1.4);
+        layer(a, 0, () => {
+          ctx.save();
+          rrect(cx0, cy, cw, ch, 18);
+          ctx.fillStyle = 'rgba(12,14,22,0.82)'; ctx.fill();
+          ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.stroke();
+          ctx.clip();
+          ctx.fillStyle = rgb(c, 0.9);
+          ctx.fillRect(cx0, cy, cw, 3.5);
+          ctx.restore();
+          text(tag, cx0 + 28, cy + 44, { size: 16, mono: true, weight: 700, color: hex, ls: 3 });
+          text(title, cx0 + 28, cy + 88, { size: 28, weight: 700, color: INK });
+          text(desc, cx0 + 28, cy + 128, { size: 20, weight: 450, color: '#a9b1c2' });
+        }, 0, (1 - s) * 34, 0.95 + 0.05 * s, cx0 + cw / 2, cy + ch / 2);
+      });
+    }, 0, 0, 1 - 0.12 * ae, W / 2, H / 2);
+  }
+
+  // Act B: Mission Statement + Thermal Aurora + Warming-Stripe Wipe (4.85 – 7.60)
+  const bx = P(lt, 7.05, 7.45);
+  if (lt > 4.85 && lt < 7.60) {
+    layer(1 - bx, bx * 14, () => {
+      const bIn = rv(lt, 4.9, 0.55);
+      // Warm radial bloom behind mission text
+      ctx.save(); ctx.globalAlpha *= bIn;
+      const rg = ctx.createRadialGradient(W / 2, H / 2, 40, W / 2, H / 2, 680);
+      rg.addColorStop(0, 'rgba(255,138,61,0.16)');
+      rg.addColorStop(0.5, 'rgba(160,40,98,0.08)');
+      rg.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+      ctx.restore();
+
+      // 3 layered translucent sine-noise thermal aurora ribbons
+      for (let r = 0; r < 3; r++) {
+        ctx.save();
+        ctx.globalAlpha *= bIn * [0.26, 0.20, 0.15][r];
+        const ag = ctx.createLinearGradient(0, 0, W, 0);
+        ag.addColorStop(0, 'rgba(86,212,234,0.85)');
+        ag.addColorStop(0.5, 'rgba(255,138,61,0.95)');
+        ag.addColorStop(1, 'rgba(252,179,58,0.85)');
+        ctx.strokeStyle = ag;
+        ctx.lineWidth = [2.5, 4.0, 6.0][r];
+        ctx.beginPath();
+        for (let x = 0; x <= W; x += 24) {
+          const ph = x * 0.0032 + lt * (0.9 + r * 0.35) + r * 2.1;
+          const yy = 540 + (r - 1) * 58 + Math.sin(ph) * (54 + r * 18) + Math.cos(ph * 0.55 + lt) * 26;
+          x === 0 ? ctx.moveTo(x, yy) : ctx.lineTo(x, yy);
+        }
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // 2 faint concentric rotating precision reticle rings
+      ctx.save();
+      ctx.globalAlpha *= bIn;
+      [330, 405].forEach((R, idx) => {
+        ctx.save();
+        ctx.translate(W / 2, H / 2);
+        ctx.rotate((idx ? -1 : 1) * lt * 0.14);
+        ctx.strokeStyle = 'rgba(255,180,120,0.09)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash(idx ? [16, 14] : [4, 10]);
+        ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.stroke();
+        ctx.restore();
+      });
+      ctx.restore();
+
+      // 36 soft rising ember particles
+      for (let i = 0; i < 36; i++) {
+        const px = (hash(i * 3.17) * 0.86 + 0.07) * W;
+        const spd = 28 + hash(i * 5.71) * 52;
+        const py = ((1080 - ((lt - 4.85) * spd + hash(i * 9.13) * 1080)) % 1080 + 1080) % 1080;
+        const sz = 1.6 + hash(i * 1.93) * 2.4;
+        const c = inferno(0.45 + hash(i * 7.3) * 0.5);
+        ctx.fillStyle = rgb(c, bIn * (0.25 + 0.45 * hash(i * 2.7)));
+        ctx.beginPath(); ctx.arc(px, py, sz, 0, Math.PI * 2); ctx.fill();
+      }
+
+      // Eyebrow + kinetic 3-line mission statement
+      const ea = rv(lt, 5.0, 0.45);
+      text('RESEARCH MISSION', W / 2, 330, { size: 20, mono: true, weight: 650, color: ORANGE, ls: 7, align: 'center', alpha: ea, blur: (1 - ea) * 8 });
+      const lines = [['Turning', 'climate', 'data'], ['into', 'early', 'warnings'], ['that', 'protect', 'people.']];
+      let wi = 0;
+      lines.forEach((ws, li) => {
+        const sz = 92, y = 445 + li * 110;
+        const full = ws.join(' '), tw = measure(full, sz, 750, false, -1.5);
+        let x = W / 2 - tw / 2;
+        ws.forEach((w, j) => {
+          const k = rv(lt, 5.05 + wi * 0.095, 0.42);
+          const hot = (li === 1 && j > 0) || (li === 2 && j > 0);
+          text(w, x, y + (1 - k) * 28, { size: sz, weight: 750, ls: -1.5, alpha: k, blur: (1 - k) * 12, color: hot ? (li === 2 ? AMBER : ORANGE) : INK });
+          x += measure(w + ' ', sz, 750, false, -1.5); wi++;
+        });
+      });
+    });
+
+    // Warming-stripe horizontal laser wipe (7.10 – 7.55) — layered glow (fast, zero shadowBlur stall)
+    const wp = eInOutC(P(lt, 7.10, 7.55));
+    if (wp > 0) {
+      const N = 72, halfW = (W / 2) * wp, sw = (W / N);
+      const xStart = W / 2 - halfW, xEnd = W / 2 + halfW;
+      ctx.save();
+      const hg = ctx.createLinearGradient(0, H / 2 - 22, 0, H / 2 + 22);
+      hg.addColorStop(0, 'rgba(255,138,61,0)');
+      hg.addColorStop(0.5, 'rgba(255,155,80,0.34)');
+      hg.addColorStop(1, 'rgba(255,138,61,0)');
+      ctx.fillStyle = hg;
+      ctx.fillRect(xStart, H / 2 - 22, xEnd - xStart, 44);
+      for (let i = 0; i < N; i++) {
+        const bx0 = i * sw, bx1 = bx0 + sw + 1;
+        if (bx1 < xStart || bx0 > xEnd) continue;
+        const cx0 = Math.max(bx0, xStart), cx1 = Math.min(bx1, xEnd);
+        const v = clamp(0.06 + 0.86 * Math.pow(i / (N - 1), 1.9) + 0.18 * (hash(i * 3.3) - 0.5));
+        ctx.fillStyle = rgb(cmap(STRIPES, v), 0.96);
+        ctx.fillRect(cx0, H / 2 - 2, cx1 - cx0, 4);
+      }
+      ctx.restore();
+    }
+  }
+
+  // Act C: Grand Architectural Signature Card (7.50 – 12.50)
+  if (lt >= 7.50) {
+    const tC = lt - 7.50;
+    const cx = W / 2, cy = 535;
+
+    // Sub-boom shockwave & dispersing ember sparks
+    const rp = P(tC, 0, 1.35);
+    if (rp > 0 && rp < 1) {
+      ctx.save();
+      ctx.strokeStyle = `rgba(255,170,110,${0.65 * (1 - rp)})`;
+      ctx.lineWidth = 2.5 + 8 * (1 - rp);
+      ctx.beginPath(); ctx.arc(cx, cy, eOutExpo(rp) * 1150, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
+    for (let i = 0; i < 80; i++) {
+      const life = P(tC, 0, 1.2 + hash(i * 1.9) * 1.1); if (life >= 1) continue;
+      const ang = hash(i * 2.3) * Math.PI * 2, dist = (160 + hash(i * 4.1) * 860) * eOutExpo(life);
+      const c = inferno(0.5 + hash(i * 6.3) * 0.5);
+      ctx.fillStyle = rgb(c, (1 - life) * 0.85);
+      const sz = 1.6 + hash(i * 8.1) * 2.8;
+      ctx.fillRect(cx + Math.cos(ang) * dist * 1.35, cy + Math.sin(ang) * dist * 0.8, sz, sz);
+    }
+
+    // Living orbital telemetry backdrop
+    const bgA = rv(tC, 0.0, 0.7);
+    ctx.save();
+    ctx.globalAlpha *= bgA;
+    const bloom = ctx.createRadialGradient(cx, cy, 40, cx, cy, 620);
+    bloom.addColorStop(0, 'rgba(255,138,61,0.13)');
+    bloom.addColorStop(0.55, 'rgba(110,30,90,0.06)');
+    bloom.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = bloom; ctx.fillRect(0, 0, W, H);
+
+    // Ring 3 (outer r=620): dashed + 15° ticks
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(tC * 0.045);
+    ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 1.2;
+    ctx.setLineDash([8, 12]);
+    ctx.beginPath(); ctx.arc(0, 0, 620, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+    for (let d = 0; d < 24; d++) {
+      const a = d * Math.PI / 12;
+      ctx.beginPath(); ctx.moveTo(Math.cos(a) * 612, Math.sin(a) * 612); ctx.lineTo(Math.cos(a) * 626, Math.sin(a) * 626); ctx.stroke();
+    }
+    ctx.restore();
+
+    // Ring 2 (middle r=520): counter-rotating hairline arcs + 3 luminous orbital dots
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(-tC * 0.08);
+    ctx.strokeStyle = 'rgba(255,138,61,0.14)'; ctx.lineWidth = 1.5;
+    for (let k = 0; k < 3; k++) {
+      const a0 = k * (Math.PI * 2 / 3) + 0.15, a1 = a0 + 1.55;
+      ctx.beginPath(); ctx.arc(0, 0, 520, a0, a1); ctx.stroke();
+      const ox = Math.cos(a1) * 520, oy = Math.sin(a1) * 520;
+      glowDot(ox, oy, 4, k === 1 ? 'rgba(86,212,234,0.9)' : 'rgba(255,179,110,0.9)', 0.85);
+    }
+    ctx.restore();
+
+    // Ring 1 (inner r=430): quiet thin ring
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(cx, cy, 430, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+
+    // 55 gentle upward-drifting micro-embers
+    for (let i = 0; i < 55; i++) {
+      const px = (hash(i * 4.7 + 10) * 0.94 + 0.03) * W;
+      const spd = 16 + hash(i * 6.2 + 20) * 28;
+      const py = ((1080 - (tC * spd + hash(i * 8.9 + 30) * 1080)) % 1080 + 1080) % 1080;
+      const sz = 1.2 + hash(i * 3.3 + 40) * 2.0;
+      const c = inferno(0.4 + hash(i * 9.7) * 0.55);
+      ctx.fillStyle = rgb(c, bgA * (0.18 + 0.38 * hash(i * 5.1)));
+      ctx.beginPath(); ctx.arc(px, py, sz, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Architectural Glassmorphic Signature Card
+    const kCard = spring(tC - 0.02, 0.72, 0.65);
+    const cardA = clamp(kCard * 1.4);
+    const cw = 1320, ch = 640, cx0 = 300, cy0 = 215;
+    layer(cardA, 0, () => {
+      ctx.save();
+      rrect(cx0, cy0, cw, ch, 26);
+      const cg = ctx.createLinearGradient(0, cy0, 0, cy0 + ch);
+      cg.addColorStop(0, 'rgba(12,14,23,0.84)');
+      cg.addColorStop(1, 'rgba(7,8,14,0.90)');
+      ctx.fillStyle = cg; ctx.fill();
+      const sg = ctx.createLinearGradient(0, cy0, 0, cy0 + ch);
+      sg.addColorStop(0, 'rgba(255,138,61,0.45)');
+      sg.addColorStop(1, 'rgba(255,255,255,0.10)');
+      ctx.lineWidth = 1.8; ctx.strokeStyle = sg; ctx.stroke();
+
+      // 4 crisp 18px L-shaped precision corner brackets
+      ctx.strokeStyle = 'rgba(255,179,110,0.55)'; ctx.lineWidth = 2.2;
+      const bl = 18, pad = 16;
+      const corners = [[cx0 + pad, cy0 + pad, 1, 1], [cx0 + cw - pad, cy0 + pad, -1, 1], [cx0 + pad, cy0 + ch - pad, 1, -1], [cx0 + cw - pad, cy0 + ch - pad, -1, -1]];
+      corners.forEach(([px, py, sx, sy]) => {
+        ctx.beginPath(); ctx.moveTo(px + sx * bl, py); ctx.lineTo(px, py); ctx.lineTo(px, py + sy * bl); ctx.stroke();
+      });
+      ctx.restore();
+
+      // 1. Eyebrow
+      const kEye = rv(tC, 0.20, 0.45);
+      text('CLIMATE RISK  ·  INTERPRETABLE AI  ·  OPEN TO COLLABORATION', cx, 285, { size: 17, mono: true, weight: 600, color: ORANGE, ls: 4, align: 'center', alpha: kEye, blur: (1 - kEye) * 8 });
+
+      // 2. Monumental Name
+      const kName = spring(tC - 0.10, 0.72, 0.6), aName = clamp(kName * 1.5);
+      ctx.save();
+      ctx.globalAlpha *= aName;
+      if (aName < 0.98) ctx.filter = `blur(${((1 - aName) * 12).toFixed(1)}px)`;
+      const ng = ctx.createLinearGradient(0, 325, 0, 420);
+      ng.addColorStop(0, '#ffffff'); ng.addColorStop(1, '#ffd9ba');
+      ctx.font = font(114, 800); ctx.fillStyle = ng; ctx.textAlign = 'center'; ctx.letterSpacing = '11px';
+      ctx.fillText('DR. ZECHENG LI', cx, 415 + (1 - kName) * 28);
+      ctx.restore();
+
+      // 3. Bookend 72-Segment Warming-Stripe Bar + Specular Sweep
+      const u = eInOutC(P(tC, 0.35, 1.05));
+      if (u > 0) {
+        const bw = 780, bx0 = cx - bw / 2, by = 452, bh = 5, N = 72, sw = bw / N;
+        const half = (bw / 2) * u, vis0 = cx - half, vis1 = cx + half;
+        const sweepX = bx0 - 120 + P(tC, 1.5, 4.3) * (bw + 240);
+        for (let i = 0; i < N; i++) {
+          const x0 = bx0 + i * sw, x1 = x0 + sw + 0.6;
+          if (x1 < vis0 || x0 > vis1) continue;
+          const vx0 = Math.max(x0, vis0), vx1 = Math.min(x1, vis1);
+          const v = clamp(0.06 + 0.86 * Math.pow(i / (N - 1), 1.9) + 0.18 * (hash(i * 3.3) - 0.5));
+          const distSweep = Math.abs((x0 + sw * 0.5) - sweepX);
+          const spec = clamp(1 - distSweep / 70);
+          const baseC = cmap(STRIPES, v);
+          const col = spec > 0 && tC >= 1.5 && tC <= 4.3 ? [lerp(baseC[0], 255, spec * 0.7), lerp(baseC[1], 242, spec * 0.7), lerp(baseC[2], 210, spec * 0.7)] : baseC;
+          ctx.fillStyle = rgb(col, 0.95);
+          ctx.fillRect(vx0, by, vx1 - vx0, bh);
+        }
+      }
+
+      // 4. Credential Line
+      const kCred = rv(tC, 0.55, 0.55);
+      text('Ph.D. in Environmental Protection  ·  Universiti Malaya', cx, 516, { size: 30, weight: 550, align: 'center', color: '#e6eaf2', alpha: kCred, blur: (1 - kCred) * 10 });
+
+      // 5. Proof Ribbon
+      const kProof = rv(tC, 0.80, 0.55);
+      text('10 PUBLICATIONS (7 JCR Q1 · 6 FIRST-AUTHOR)   ·   IPCC AR7 EXPERT REVIEWER   ·   USYD & UM', cx, 568, { size: 16, mono: true, weight: 600, align: 'center', color: MUTED, ls: 2, alpha: kProof });
+
+      // 6. Hairline Divider
+      ctx.save(); ctx.globalAlpha *= kProof;
+      ctx.fillStyle = 'rgba(255,255,255,0.10)'; ctx.fillRect(640, 608, 640, 1);
+      ctx.restore();
+
+      // 7. Primary Email Pill with subtle breathing multi-stroke glow (fast, zero shadowBlur stall)
+      const kMail = rv(tC, 1.05, 0.55);
+      if (kMail > 0) {
+        const pulse = 0.5 + 0.5 * Math.sin(tC * 2.4);
+        layer(kMail, (1 - kMail) * 8, () => {
+          const emailLabel = '✉  lizecheng3590@gmail.com';
+          const ew = measure(emailLabel, 25, 650, true, 0) + 68, eh = 58;
+          ctx.save();
+          rrect(cx - ew / 2 - 8, 682 - eh / 2 - 8, ew + 16, eh + 16, (eh + 16) / 2);
+          ctx.strokeStyle = `rgba(255,138,61,${0.08 + 0.08 * pulse})`; ctx.lineWidth = 8; ctx.stroke();
+          rrect(cx - ew / 2 - 3, 682 - eh / 2 - 3, ew + 6, eh + 6, (eh + 6) / 2);
+          ctx.strokeStyle = `rgba(255,138,61,${0.16 + 0.14 * pulse})`; ctx.lineWidth = 4; ctx.stroke();
+          ctx.restore();
+          chip(emailLabel, cx, 682, { center: true, size: 25, mono: true, weight: 650, h: eh, padX: 34, stroke: `rgba(255,138,61,${0.78 + 0.2 * pulse})`, fill: 'rgba(255,138,61,0.12)' });
+        }, 0, (1 - kMail) * 18);
+      }
+
+      // 8. Links Row with colored accent dots
+      const links = [['Google Scholar', CYAN], ['ORCID 0009-0002-7197-6679', ORANGE], ['LinkedIn', AMBER]];
+      const chipSize = 19, padL = 38, padR = 22, gap = 20;
+      const lw = links.map(([l]) => measure(l, chipSize, 600, true) + padL + padR);
+      const tot = lw.reduce((a, b) => a + b, 0) + gap * 2;
+      let xx = cx - tot / 2;
+      links.forEach(([l, dotCol], i) => {
+        const s = spring(tC - 1.35 - i * 0.12, 0.6, 0.45);
+        if (s > 0) {
+          const w = lw[i], h = 40, y = 772;
+          layer(clamp(s * 1.5), 0, () => {
+            ctx.save();
+            rrect(xx, y - h / 2, w, h, h / 2);
+            ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fill();
+            ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(255,255,255,0.25)'; ctx.stroke();
+            ctx.fillStyle = dotCol;
+            ctx.beginPath(); ctx.arc(xx + 20, y, 4.2, 0, Math.PI * 2); ctx.fill();
+            ctx.font = font(chipSize, 600, MONO);
+            ctx.fillStyle = INK; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+            ctx.fillText(l, xx + padL, y + 1);
+            ctx.restore();
+          }, 0, (1 - s) * 20, 1, xx + w / 2, y);
+        }
+        xx += lw[i] + gap;
+      });
+    }, 0, 0, 0.94 + 0.06 * kCard, cx, cy);
+
+    // Bottom location footer outside card
+    const kLoc = rv(tC, 1.65, 0.55);
+    text('WUHAN, CHINA   ·   KUALA LUMPUR, MALAYSIA', cx, 928, { size: 17, mono: true, color: DIM, align: 'center', ls: 3, alpha: kLoc });
+  }
+}
+
+// =====================================================================
+const SCENES = [scene1, scene2, scene3, scene4, scene5, scene6, scene7, scene8];
+window.renderAt = function (t) {
+  t = clamp(t, 0, DUR - 1e-6);
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.filter = 'none';
+  background(t);
+  const si = sceneIndex(t);
+  SCENES[si](t - CUTS[si]);
+  hud(t);
+  cutFlash(t);
+  postFX(t);
+};
+
+// ---------- runtime ----------
+const qs = new URLSearchParams(location.search);
+if (qs.has('t')) {
+  document.fonts.ready.then(() => renderAt(parseFloat(qs.get('t'))));
+} else if (!qs.has('capture')) {
+  const overlay = document.getElementById('overlay-play');
+  const btnToggle = document.getElementById('btn-toggle');
+  const btnMute = document.getElementById('btn-mute');
+  const btnFs = document.getElementById('btn-fs');
+  const scrubWrap = document.getElementById('scrub-wrap');
+  const scrubFill = document.getElementById('scrub-fill');
+  const timeLabel = document.getElementById('time-label');
+
+  const audio = new Audio('/assets/bgm.m4a');
+  audio.preload = 'auto';
+  let playing = false;
+  let muted = false;
+  let currentT = 11.5; // Attractive default poster frame showing Dr. Zecheng Li identity card
+  let lastWall = 0;
+
+  function fmt(sec) {
+    const s = Math.max(0, Math.floor(sec));
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return `${String(m).padStart(2, '0')}:${String(r).padStart(2, '0')}`;
+  }
+
+  function updateUI(t) {
+    scrubFill.style.width = `${clamp(t / DUR, 0, 1) * 100}%`;
+    timeLabel.textContent = `${fmt(t)} / 01:20`;
+    btnToggle.textContent = playing ? '⏸ 暂停' : '▶ 播放';
+    overlay.classList.toggle('is-playing', playing);
+    try {
+      window.parent.postMessage({ type: 'reel-timeupdate', time: t }, '*');
+    } catch {}
+  }
+
+  function syncAudioTo(t) {
+    if (!muted && audio.readyState >= 1) {
+      try {
+        if (Math.abs(audio.currentTime - t) > 0.35) {
+          audio.currentTime = t;
+        }
+      } catch {}
+    }
+  }
+
+  function startPlay(fromTime) {
+    if (typeof fromTime === 'number') {
+      currentT = clamp(fromTime, 0, DUR - 0.05);
+    } else if (currentT >= DUR - 0.1 || currentT === 11.5) {
+      currentT = 0;
+    }
+    playing = true;
+    lastWall = performance.now();
+    if (!muted) {
+      try {
+        audio.currentTime = currentT;
+        audio.play().catch(() => {});
+      } catch {}
+    }
+    updateUI(currentT);
+  }
+
+  function pausePlay() {
+    playing = false;
+    try { audio.pause(); } catch {}
+    updateUI(currentT);
+  }
+
+  function seekTo(sec, autoPlay = true) {
+    currentT = clamp(sec, 0, DUR - 0.01);
+    renderAt(currentT);
+    syncAudioTo(currentT);
+    if (autoPlay && !playing) {
+      startPlay(currentT);
+    } else {
+      updateUI(currentT);
+    }
+  }
+
+  function tick(now) {
+    if (playing) {
+      const dt = Math.min(0.1, (now - lastWall) / 1000);
+      lastWall = now;
+      if (!muted && !audio.paused && audio.readyState >= 2) {
+        currentT = audio.currentTime;
+      } else {
+        currentT += dt;
+      }
+      if (currentT >= DUR) {
+        currentT = DUR - 0.001;
+        renderAt(currentT);
+        pausePlay();
+      } else {
+        renderAt(currentT);
+        updateUI(currentT);
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  overlay.addEventListener('click', () => (playing ? pausePlay() : startPlay()));
+  cv.addEventListener('click', () => (playing ? pausePlay() : startPlay()));
+  btnToggle.addEventListener('click', () => (playing ? pausePlay() : startPlay()));
+
+  btnMute.addEventListener('click', () => {
+    muted = !muted;
+    audio.muted = muted;
+    btnMute.textContent = muted ? '🔇 静音' : '🔊 配乐';
+    if (!muted && playing) {
+      try {
+        audio.currentTime = currentT;
+        audio.play().catch(() => {});
+      } catch {}
+    }
+  });
+
+  btnFs.addEventListener('click', () => {
+    const el = document.documentElement;
+    if (!document.fullscreenElement) {
+      (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el);
+    } else {
+      (document.exitFullscreen || document.webkitExitFullscreen || (() => {})).call(document);
+    }
+  });
+
+  let dragging = false;
+  function scrubFromEvent(e) {
+    const rect = scrubWrap.getBoundingClientRect();
+    const ratio = clamp((e.clientX - rect.left) / rect.width, 0, 1);
+    seekTo(ratio * DUR, playing);
+  }
+  scrubWrap.addEventListener('pointerdown', e => {
+    dragging = true;
+    scrubWrap.setPointerCapture(e.pointerId);
+    scrubFromEvent(e);
+  });
+  scrubWrap.addEventListener('pointermove', e => {
+    if (dragging) scrubFromEvent(e);
+  });
+  scrubWrap.addEventListener('pointerup', () => { dragging = false; });
+
+  window.addEventListener('message', event => {
+    const data = event.data;
+    if (data && data.type === 'reel-seek') {
+      seekTo(Number(data.time || 0), true);
+    }
+  });
+
+  document.fonts.ready.then(() => {
+    renderAt(currentT);
+    updateUI(currentT);
+    requestAnimationFrame(tick);
+  });
+}
+window.READY = document.fonts.ready.then(() => true);
+</script>
+</body>
+</html>

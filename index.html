@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="李泽城（Zecheng Li）个人学术主页与研究博客。马来亚大学环境保护博士候选人、悉尼大学计算机科学学士与信息技术硕士、IPCC AR7 第四章专家评审。聚焦全球旱地生态水文因果发现（npj Climate and Atmospheric Science）、城市高温早期预警（CMIP6 + 机器学习）与环境数据科学。">
+  <meta name="author" content="Zecheng Li (李泽城)">
+  <meta name="color-scheme" content="light dark">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="李泽城 Zecheng Li | 气候风险、环境数据科学与因果发现学术主页">
+  <meta property="og:description" content="李泽城（Zecheng Li）个人学术主页与研究博客。马来亚大学环境保护博士候选人、悉尼大学计算机科学学士与信息技术硕士、IPCC AR7 第四章专家评审。聚焦全球旱地生态水文因果发现（npj Climate and Atmospheric Science）、城市高温早期预警（CMIP6 + 机器学习）与环境数据科学。">
+  <meta property="og:image" content="https://lizechengwangzi123.github.io/assets/npj-fig1-workflow.jpg">
+  <link rel="canonical" href="https://lizechengwangzi123.github.io/">
+  <meta property="og:url" content="https://lizechengwangzi123.github.io/">
+  
+  <title>李泽城 Zecheng Li | 气候风险、环境数据科学与因果发现学术主页</title>
+  <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <script src="/assets/theme.js"></script>
+  <link rel="stylesheet" href="/assets/site.css">
+  <script defer src="/assets/site.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <header class="site-header">
+    <div class="shell header-inner">
+      <a class="brand" href="/" aria-label="Zecheng Li 首页">
+        <span class="monogram" aria-hidden="true">ZL</span>
+        <span class="brand-text">
+          <strong lang="en">Zecheng Li <span class="brand-zh" lang="zh-CN">李泽城</span></strong>
+          <small>马来亚大学博士候选人 · 悉尼大学 CS & IT</small>
+        </span>
+      </a>
+      <nav class="nav" aria-label="主导航">
+        <a href="/" aria-current="page">首页</a><a href="/#research-reel">研究短片</a><a href="/research/npj-dryland-hydroclimate/">npj 代表作</a><a href="/research/">学术发表</a><a href="/notes/">科研博客</a><a href="/about/">简历与经历</a>
+      </nav>
+      <div class="header-controls">
+        <a class="cv-nav-btn" href="/assets/Zecheng_Li_Academic_CV.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9.5 15.5 2.5 2.5 2.5-2.5"/></svg><span>CV.pdf</span></a>
+        <a class="lang-link" href="/en/" lang="en" title="Switch to English Academic Profile">EN</a>
+        <button class="icon-button theme-toggle" type="button" aria-label="切换深色模式" aria-pressed="false" hidden>
+          <span class="theme-glyph" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="shell" tabindex="-1">
+<section class="profile-hero" aria-labelledby="profile-name">
+  <aside class="profile-sidebar">
+    <div class="avatar-frame">
+      <img src="/assets/avatar.jpg" alt="李泽城 (Zecheng Li) 学术证件照" width="270" height="313" fetchpriority="high">
+      <span class="avatar-badge" title="IPCC AR7 Chapter 4 Expert Reviewer">IPCC AR7 专家评审</span>
+    </div>
+    <div class="sidebar-identity">
+      <h1 id="profile-name">李泽城 <span lang="en">Zecheng Li</span></h1>
+      <p class="sidebar-role">环境保护博士候选人 (Ph.D. Candidate)</p>
+      <ul class="sidebar-affiliations">
+        <li><strong>马来亚大学 (Universiti Malaya)</strong><span>高等研究院 · 环境保护博士研究 (2023–2026)</span></li>
+        <li><strong>悉尼大学 (The University of Sydney)</strong><span>信息技术硕士 · 数据管理与分析 (M.IT, 2022–2023)</span></li>
+        <li><strong>悉尼大学 (The University of Sydney)</strong><span>理学学士 · 计算机科学 (B.Sc. in CS, 2019–2021)</span></li>
+      </ul>
+      <div class="status-pill">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>博士答辩：2026 年 11 月 · 预计毕业：2027 年 2–3 月</span>
+      </div>
+    </div>
+    <div class="sidebar-links" aria-label="学术档案与联系方式">
+      
+    <a class="profile-chip" href="https://scholar.google.com/citations?user=BJvzLlcAAAAJ" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3L2 9l10 6 10-6-10-6z"/><path d="M6 12.5V17c0 1.7 2.7 3 6 3s6-1.3 6-3v-4.5"/><path d="M22 9v7"/></svg><span>Google Scholar</span></a>
+    <a class="profile-chip" href="https://orcid.org/0009-0002-7197-6679" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 10.5v5.5"/><circle cx="8.5" cy="8" r="0.6" fill="currentColor"/><path d="M11.5 16v-5.5h2.2a2.75 2.75 0 0 1 0 5.5h-2.2z"/></svg><span>ORCID</span></a>
+    <a class="profile-chip" href="https://www.scopus.com/authid/detail.uri?authorId=59641998600" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/><path d="M8.5 11h5"/><path d="M11 8.5v5"/></svg><span>Scopus (59641998600)</span></a>
+    <a class="profile-chip" href="https://www.linkedin.com/in/zecheng-li-a7b858399/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 11v5"/><path d="M8 8v.01"/><path d="M12 16v-5"/><path d="M16 16v-3a2 2 0 0 0-4 0"/></svg><span>LinkedIn</span></a>
+    <a class="profile-chip" href="mailto:lizecheng3590@gmail.com"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="m3.5 6.5 8.5 6 8.5-6"/></svg><span>lizecheng3590@gmail.com</span></a>
+    <a class="profile-chip profile-chip-accent" href="/assets/Zecheng_Li_Academic_CV.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="m9.5 15.5 2.5 2.5 2.5-2.5"/></svg><span>下载学术简历 CV (PDF)</span></a>
+  
+    </div>
+  </aside>
+
+  <div class="profile-main">
+    <div class="bio-eyebrow">
+      <span class="eyebrow-tag">Climate Extremes &amp; Early Warning</span>
+      <span class="eyebrow-tag">Causal Discovery (PCMCI)</span>
+      <span class="eyebrow-tag">Interpretable Machine Learning</span>
+      <span class="eyebrow-tag">Earth Observation</span>
+    </div>
+    <h2 class="bio-headline">以计算机科学的方法论与工程纪律，<br>构建可检验、可落地的气候风险预警与生态水文模型。</h2>
+    <div class="bio-prose">
+      <p>我是马来亚大学（Universiti Malaya）环境保护专业博士候选人，此前在澳大利亚悉尼大学（The University of Sydney）获得<strong>计算机科学理学学士（B.Sc.）</strong>与<strong>数据管理与分析方向信息技术硕士（M.IT）</strong>学位，并曾在<strong>华为技术有限公司（Huawei）</strong>从事代码诊断、修复与算法工程工作。我的研究致力于回答一个核心问题：<strong>如何将多源卫星遥感、CMIP6 气候情景投射与因果发现/可解释机器学习深度融合，把复杂的极端气候信号转化为经得起统计严苛检验且能直接服务于政策干预的早期预警证据？</strong></p>
+      <p>在短短三年的博士研究周期内，我完成了跨计算机科学、大气与生态水文遥感、环境流行病学及碳金融市场的系统攻关，累计发表/接收同行评审论文 <strong>10 篇（其中第一作者 7 篇、JCR Q1 期刊 8 篇）</strong>，代表作被 Nature Portfolio 旗下地球科学顶刊 <strong><em>npj Climate and Atmospheric Science</em></strong> 接收（第一作者兼通讯作者），并在 <strong><em>Journal of Environmental Management</em></strong>、<strong><em>Scientific Reports</em></strong> 等权威期刊发表多篇一作成果；同时受邀担任 <strong>联合国政府间气候变化专门委员会（IPCC）第七次评估报告（AR7）第四章专家评审</strong>。</p>
+    </div>
+
+    <div class="metrics-strip" aria-label="核心学术指标总览">
+      <div class="metric-box">
+        <strong>10 <small>篇</small></strong>
+        <span>已发表/接收 SCI/SSCI 论文</span>
+        <small>7 篇第一作者 · 8 篇 JCR Q1</small>
+      </div>
+      <div class="metric-box">
+        <strong>npj / Sci.Rep.</strong>
+        <span>Nature Portfolio 代表作</span>
+        <small>npj Clim. Atmos. Sci. 一作兼通讯</small>
+      </div>
+      <div class="metric-box">
+        <strong>IPCC AR7</strong>
+        <span>第四章专家评审 (Ch.4)</span>
+        <small>兼任 ERL / Sci. Rep. 等 5 刊审稿人</small>
+      </div>
+      <div class="metric-box">
+        <strong>7,332 <small>格点</small></strong>
+        <span>全球天然旱地因果发现</span>
+        <small>276 个月序列 × 18 项稳健性实验</small>
+      </div>
+    </div>
+
+    <div class="traits-grid" aria-label="核心科研与工程特质">
+      <article class="trait-card">
+        <div class="trait-header">
+          <span class="trait-num">01</span>
+          <h3>科研产出与学术公信力突出</h3>
+        </div>
+        <p>博士期间以<strong>第一作者</strong>在 <em>npj Climate and Atmospheric Science</em> (JCR Q1)、<em>Journal of Environmental Management</em> (JCR Q1)、<em>Scientific Reports</em> (JCR Q1) 等发表 7 篇高水平论文，另有 4 篇工作论文在 <em>Climate Services</em>（邀请大修）、<em>npj Urban Sustainability</em> 等审稿中；受邀担任 <strong>IPCC AR7 第四章专家评审</strong>，团队入选 2026 ACTION 气候—健康创新挑战赛全球 Top 50。</p>
+      </article>
+      <article class="trait-card">
+        <div class="trait-header">
+          <span class="trait-num">02</span>
+          <h3>计算机 + 地球科学全栈专业能力</h3>
+        </div>
+        <p>拥有悉尼大学本硕计算机与数据分析科班背景及华为工程经历。精通<strong>高维时间序列因果发现（PCMCI / PCMCI+ / 非线性 GPDC）</strong>、<strong>可解释机器学习（Random Forest + SHAP、Ridge 时序交叉验证）</strong>、<strong>小波相干与非线性结构断点协整（Maki / Gregory-Hansen / Hatemi-J）</strong>，以及大规模遥感与气候模式（MODIS、TerraClimate、SPEIbase、CMIP6）自动化流水线开发。</p>
+      </article>
+      <article class="trait-card">
+        <div class="trait-header">
+          <span class="trait-num">03</span>
+          <h3>学习能力快 · 跨学科破壁极强</h3>
+        </div>
+        <p>从纯计算机工程与物联网系统监控快速切入<strong>干旱区生态水文、城市热风险早期预警、环境健康流行病学与欧盟碳市场（EU ETS）风险传导</strong>四大方向。通过独创的“微样本手算核验 → 确定性自动化基线 → 全量参数敏感性检验”工作流，将陌生领域的复杂方法迅速转化为顶刊级可复现代码。</p>
+      </article>
+      <article class="trait-card">
+        <div class="trait-header">
+          <span class="trait-num">04</span>
+          <h3>吃苦耐劳 · 工业级执行力与严谨度</h3>
+        </div>
+        <p>对待科学研究坚持高强度、不留死角的实证标准：在 <em>npj</em> 代表作中，独立对全球 20,311 个旱地网格实施五级纯度筛查，在 7,318 个天然植被格点上完成逾 <strong>13.1 万次条件独立性检验与全局 BH-FDR 校正</strong>，并主动加跑 <strong>18 组全量敏感性对照与 2,000 次多尺度空间块自助采样</strong>，以扎实苦干确保每一项科学声明无懈可击。</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+
+<section class="home-section reel-section" id="research-reel" aria-labelledby="reel-heading">
+  <div class="section-header">
+    <div>
+      <span class="section-kicker">INTERACTIVE RESEARCH REEL · 80 秒个人学术与代表作动态短片（国内/微信秒开零缓冲）</span>
+      <h2 id="reel-heading">80 秒看懂我的跨学科轨迹与核心科研突破</h2>
+    </div>
+    <div class="pub-actions" style="margin-top:0">
+      <a class="button button-outline" href="/assets/reel-player.html" target="_blank" rel="noopener">全屏交互播放 ↗</a>
+      <a class="button button-outline" href="/assets/Zecheng_Li_Research_Reel.mp4" target="_blank" rel="noopener">下载/打开 MP4 视频文件 ↓</a>
+    </div>
+  </div>
+
+  <div class="reel-theater">
+    <div class="reel-player-col">
+      <div class="reel-video-frame">
+        <iframe id="research-reel-iframe" src="/assets/reel-player.html" title="Zecheng Li Research Reel Interactive 1080p 60fps Player" allow="autoplay; fullscreen" loading="eager"></iframe>
+      </div>
+      <div class="reel-caption-bar">
+        <span class="badge badge-flagship">▶ 1080p 60fps 零缓冲矢量引擎 + 原生配乐</span>
+        <p>采用 35KB 原生矢量渲染引擎 + AAC 配乐流，国内手机/微信/电脑均可 0.1 秒即点即播；点击右侧任意章节可瞬时跳转。</p>
+      </div>
+    </div>
+
+    <div class="reel-chapters-col" role="region" aria-label="视频章节跳转">
+      <div class="reel-chapters-header">
+        <strong>8 大章节导览（点击即刻跳转播放）</strong>
+        <span>00:00 – 01:20</span>
+      </div>
+      <div class="reel-chapter-list">
+        <button type="button" class="reel-chapter-btn" data-seek-time="0">
+              <span class="chapter-time">00:00</span>
+              <div class="chapter-text">
+                <strong><em>01</em> 全球升温与核心发问</strong>
+                <span>地球正在加速变暖：谁面临最高风险？预警应在何时发出？</span>
+              </div>
+            </button><button type="button" class="reel-chapter-btn is-active" data-seek-time="7.5">
+              <span class="chapter-time">00:08</span>
+              <div class="chapter-text">
+                <strong><em>02</em> 跨学科身份定位</strong>
+                <span>计算机科学科班 → 数据分析硕士 → 气候风险与早期预警学者</span>
+              </div>
+            </button><button type="button" class="reel-chapter-btn" data-seek-time="15">
+              <span class="chapter-time">00:15</span>
+              <div class="chapter-text">
+                <strong><em>03</em> 全球求学与科研轨迹</strong>
+                <span>中国武汉 → 澳大利亚悉尼大学 (B.Sc. &amp; M.IT) → 马来亚大学 (Ph.D.)</span>
+              </div>
+            </button><button type="button" class="reel-chapter-btn" data-seek-time="27.5">
+              <span class="chapter-time">00:28</span>
+              <div class="chapter-text">
+                <strong><em>04</em> 热脆弱性归因 (Sci. Rep.)</strong>
+                <span>马来西亚 16 州区 · Random Forest + SHAP 多尺度驱动解析 (R² = 0.86)</span>
+              </div>
+            </button><button type="button" class="reel-chapter-btn" data-seek-time="37.5">
+              <span class="chapter-time">00:38</span>
+              <div class="chapter-text">
+                <strong><em>05</em> CMIP6 早期预警 (JEM)</strong>
+                <span>时间顺序留出 R² = 0.53 · 耦合 SSP1-2.6/5-8.5 与四级业务化警报仪表盘</span>
+              </div>
+            </button><button type="button" class="reel-chapter-btn" data-seek-time="47.5">
+              <span class="chapter-time">00:48</span>
+              <div class="chapter-text">
+                <strong><em>06</em> 学术发表全景矩阵</strong>
+                <span>10 篇已发表/接收论文（含 npj Clim. Atmos. Sci. 代表作）与 4 篇在审研究</span>
+              </div>
+            </button><button type="button" class="reel-chapter-btn" data-seek-time="57.5">
+              <span class="chapter-time">00:58</span>
+              <div class="chapter-text">
+                <strong><em>07</em> IPCC AR7 评审与技术栈</strong>
+                <span>IPCC AR7 第四章专家评审 · ACTION 全球 Top 50 · 全栈计算工具球</span>
+              </div>
+            </button><button type="button" class="reel-chapter-btn" data-seek-time="67.5">
+              <span class="chapter-time">01:08</span>
+              <div class="chapter-text">
+                <strong><em>08</em> 全球研究版图与使命</strong>
+                <span>覆盖全球天然旱地、东南亚、巴西、美国与欧盟碳市场：将气候数据转化为保护人群的早期预警</span>
+              </div>
+            </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="home-section flagship-spotlight" aria-labelledby="flagship-heading">
+  <div class="section-header">
+    <div>
+      <span class="section-kicker">FLAGSHIP REPRESENTATIVE WORK · 第一作者兼通讯作者代表作</span>
+      <h2 id="flagship-heading">npj Climate and Atmospheric Science (Nature Portfolio · JCR Q1)</h2>
+    </div>
+    <a class="button button-primary" href="/research/npj-dryland-hydroclimate/">进入代表作深度专题页 →</a>
+  </div>
+
+  <div class="flagship-card">
+    <div class="flagship-info">
+      <div class="pub-badges">
+        <span class="badge badge-flagship">★ 代表作 · First &amp; Corresponding Author</span>
+        <span class="badge badge-q1">npj Climate and Atmospheric Science · JCR Q1</span>
+        <span class="badge badge-venue">Accepted for Publication (2026)</span>
+      </div>
+      <h3 class="flagship-title-en" lang="en">
+        <a href="/research/npj-dryland-hydroclimate/">Monthly hydroclimatic associations in sampled natural dryland vegetation</a>
+      </h3>
+      <p class="flagship-title-zh">全球采样天然旱地植被的月尺度水文气候条件关联研究</p>
+      <p class="flagship-authors" lang="en"><strong class="me-author"><strong class="me-author">Zecheng Li</strong>*</strong>, Xuanyu Chen, Chng Saun Fong, Yijuan Shen · <em>Institute for Advanced Studies, Universiti Malaya</em></p>
+      <p class="flagship-abstract">月尺度卫星遥感为评估全球干旱区植被绿度与气候变化的关系提供了统一的时间标尺，但不同水文气候指标本身包含不同长度的历史累积信息。本研究基于 2001–2023 年（共 276 个月）0.5° 全球网格数据，在严格筛选自然植被覆盖度（≥85% 自然植被、≤5% 人为覆盖、干旱指数 0.05 ≤ AI &lt; 0.65）与观测质量后，对全球 7,332 个天然旱地格点的增强植被指数（MODIS EVI）季节异常进行系统分析（成功拟合 7,318 个格点，占全球陆地主导旱地网格的 39.0%）。通过严格滞后 PCMCI（1–6 个月前导）与包含当月的 PCMCI+（0–6 个月）条件独立性因果发现框架及全局 Benjamini–Hochberg FDR 校正（q ≤ 0.05），研究发现：当允许当月进入搜索时，6,125 条保留关联中有 69.6% 落在当月（lag 0）、26.5% 落在前一个月（lag 1），合计达 96.1%；在严格前导（lag 1–6）模型保留的 5,638 条关联中，83.3%（4,694 条）集中于前一个月（lag 1），且潜在蒸散发（PET）在 58.1% 的检出格点中获得最强统计支持（SPEI-6 占 27.6%，土壤水 SOIL 占 14.3%）。跨越 18 项严苛敏感性与稳健性实验表明：水文气候与植被的“耦合时间窗口（Selected Month）”一致性高达 92.2%–98.5%，远比“水分供给 vs. 大气蒸发需求主导类别（Indicator Role）”的分类更为稳健。</p>
+
+      <div class="flagship-kpi-grid">
+        <div class="flagship-kpi">
+              <strong>7,332</strong>
+              <span>全球天然旱地采样格点</span>
+              <small>从 20,311 个旱地网格中经自然植被 ≥85% 与质量掩膜严格筛选，7,318 个成功收敛</small>
+            </div><div class="flagship-kpi">
+              <strong>83.3%</strong>
+              <span>Lag-1 前导月集中度</span>
+              <small>严格滞后 PCMCI 保留的 5,638 条显著关联中 4,694 条集中于前一个月；PCMCI+ 中 Lag 0–1 占 96.1%</small>
+            </div><div class="flagship-kpi">
+              <strong>58.1%</strong>
+              <span>PET 首要统计支持占比</span>
+              <small>在 4,029 个检出格点中，PET 占 58.1%，SPEI-6 占 27.6%，土壤水占 14.3%，另有 1,019 个格点呈现水热双路径共存</small>
+            </div><div class="flagship-kpi">
+              <strong>95.6%</strong>
+              <span>时序窗口跨代理稳健性</span>
+              <small>SOIL 替换为气候水分亏缺 DEF 时，月份一致性达 95.6%，而水/需求角色一致性仅 46.7%——证明“时序比路径更稳”</small>
+            </div>
+      </div>
+
+      <div class="flagship-actions">
+        <a class="button button-primary" href="/research/npj-dryland-hydroclimate/">浏览完整研究设计、18 项稳健性实验与高清图表</a>
+        <a class="button button-outline" href="/notes/npj-dryland-pcmci/">阅读代表作方法学复盘博客</a>
+      </div>
+    </div>
+
+    <div class="flagship-gallery" aria-label="代表作核心出版级图表预览（点击可放大）">
+      <p class="gallery-hint">点击任意图件可开启全屏高清视图（From <code>Gondwana_research/manuscript</code>）：</p>
+      <div class="flagship-thumbs">
+        <button type="button" class="flagship-thumb" data-lightbox-src="/assets/npj-fig1-workflow.jpg" data-lightbox-caption="Figure 1 · 全球天然旱地采样框架、条件滞后检验架构与空间覆盖 — (a) 研究架构：整合 0.5° 网格上的 SPEI-6、TerraClimate 土壤水（SOIL）、参考蒸散发（PET）与 MODIS EVI（2001–2023 共 276 个月），扣除季节循环与 ENSO（ONI t, t-1, t-2）线性遥相关后，逐格点独立运行 PCMCI 条件独立性检验并进行全局 BH-FDR (q ≤ 0.05) 校正。(b) 全球 7,332 个候选天然旱地格点的干旱等级分布（半干旱 3,439、干旱 2,880、干亚湿润 1,013）。(c) 从 20,311 个干旱指数网格到 7,318 个成功拟合网格的五步筛选轨迹。">
+              <img src="/assets/npj-fig1-workflow.jpg" alt="Figure 1 · 全球天然旱地采样框架、条件滞后检验架构与空间覆盖" loading="eager">
+              <span class="thumb-label"><strong>Fig. 1</strong> 全球天然旱地采样框架、条件滞后检验架构与空间覆盖</span>
+            </button><button type="button" class="flagship-thumb" data-lightbox-src="/assets/npj-fig2-timing.jpg" data-lightbox-caption="Figure 2 · 月尺度水文气候关联的滞后时序分布与首要统计支持指标全球分布 — (a) 允许当月关系（PCMCI+，6,125 条关联）时，69.6% 落在 lag 0，26.5% 落在 lag 1。(b) 严格前导检验（PCMCI，5,638 条关联）时，83.3% 集中于 lag 1（1 个月前），lag 2 骤降至 7.7%。(c) 严格滞后模型中各格点 BH 校正后 q 值最小的首要支持指标全球分布（PET 58.1%，SPEI-6 27.6%，SOIL 14.3%）。">
+              <img src="/assets/npj-fig2-timing.jpg" alt="Figure 2 · 月尺度水文气候关联的滞后时序分布与首要统计支持指标全球分布" loading="lazy">
+              <span class="thumb-label"><strong>Fig. 2</strong> 月尺度水文气候关联的滞后时序分布与首要统计支持指标全球分布</span>
+            </button><button type="button" class="flagship-thumb" data-lightbox-src="/assets/npj-fig3-groups.jpg" data-lightbox-caption="Figure 3 · 水分供给与大气蒸发需求关联路径的空间共存格局及干旱等级构成 — (a) 保留关联类别全球地图：仅水分指标（Water only，1,344 格点）、仅 PET（PET only，1,666 格点）、水热联合检出（Joint，1,019 格点）与无显著关联（3,289 格点）。(b) 干旱（Arid）、半干旱（Semi-arid）与干亚湿润（Dry sub-humid）三大气候区的面积加权构成比例。">
+              <img src="/assets/npj-fig3-groups.jpg" alt="Figure 3 · 水分供给与大气蒸发需求关联路径的空间共存格局及干旱等级构成" loading="lazy">
+              <span class="thumb-label"><strong>Fig. 3</strong> 水分供给与大气蒸发需求关联路径的空间共存格局及干旱等级构成</span>
+            </button><button type="button" class="flagship-thumb" data-lightbox-src="/assets/npj-fig4-robustness.jpg" data-lightbox-caption="Figure 4 · 18 项敏感性实验中的“月份 vs. 指标角色”一致性对比及代理变量替换转移流图 — (a) 双环一致性图：外环（青色）代表“选中滞后月份（Selected month）”与主模型的一致率（在严格前导代理对比中均高达 92.2%–100%），内环（棕色）代表“水分/大气需求宽泛角色（Indicator role）”一致率。(b) 当土壤水（SOIL）被替换为气候水分亏缺（DEF）时，6,808 个共同拟合格点在四类路径间的显著迁移（Sankey 图），直观揭示指标定义如何重塑主导路径分类。">
+              <img src="/assets/npj-fig4-robustness.jpg" alt="Figure 4 · 18 项敏感性实验中的“月份 vs. 指标角色”一致性对比及代理变量替换转移流图" loading="lazy">
+              <span class="thumb-label"><strong>Fig. 4</strong> 18 项敏感性实验中的“月份 vs. 指标角色”一致性对比及代理变量替换转移流图</span>
+            </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="home-section news-and-highlights" aria-labelledby="news-heading">
+  <div class="dual-col-grid">
+    <div class="news-panel">
+      <div class="section-header-compact">
+        <span class="section-kicker">ACADEMIC MILESTONES</span>
+        <h2 id="news-heading">近期学术动态 (News &amp; Updates)</h2>
+      </div>
+      <ol class="news-timeline">
+        <li>
+          <time datetime="2026-11">2026.11</time>
+          <div>
+            <span class="badge badge-flagship">Accepted · JCR Q1</span>
+            <strong>代表作获 Nature Portfolio 旗下 <em>npj Climate and Atmospheric Science</em> 正式接收！</strong>
+            <p>第一作者兼通讯作者论文 <em>"Monthly hydroclimatic associations in sampled natural dryland vegetation"</em> 完成全部审稿与修回，正式录用。</p>
+          </div>
+        </li>
+        <li>
+          <time datetime="2026-11">2026.11</time>
+          <div>
+            <span class="badge badge-venue">Ph.D. Final Viva</span>
+            <strong>马来亚大学博士学位论文最终答辩定于 2026 年 11 月 12 日</strong>
+            <p>预计于 2027 年 2–3 月完成博士阶段全部要求，目前开放海内外博士后（Postdoc）、教职及气候数据科学研发岗位交流。</p>
+          </div>
+        </li>
+        <li>
+          <time datetime="2026-10">2026.10</time>
+          <div>
+            <span class="badge badge-first">First Author · JCR Q2</span>
+            <strong>欧盟碳排放交易体系（EU ETS）气候压力与能源冲击传导论文在线发表</strong>
+            <p>第一作者论文发表于 <em>International Journal of Climate Change Strategies and Management</em>；同月受邀参加第 6 届国际遥感电子会议（ECRS 2026）。</p>
+          </div>
+        </li>
+        <li>
+          <time datetime="2026-06">2026.06</time>
+          <div>
+            <span class="badge badge-q1">First Author · JCR Q1</span>
+            <strong>融合机器学习与 CMIP6 投射的城市热风险早期预警论文发表于 <em>J. Environ. Manage.</em></strong>
+            <p>通过时间顺序留出（Holdout R² = 0.5288）与时序交叉验证构建可迁移高温预警框架（Vol. 413, 130304）。</p>
+          </div>
+        </li>
+        <li>
+          <time datetime="2026-04">2026.04</time>
+          <div>
+            <span class="badge badge-q1">First Author · JCR Q1</span>
+            <strong>马来西亚多尺度热脆弱性驱动机制论文发表于 Nature 旗下 <em>Scientific Reports</em></strong>
+            <p>结合 Random Forest 与 SHAP 解析 13 州与 3 联邦直辖区十年数据，耦合大气热应力（UTCI、O₃、PM2.5）实现 R² = 0.8623 的全因死亡率预测。</p>
+          </div>
+        </li>
+        <li>
+          <time datetime="2026-03">2026.03</time>
+          <div>
+            <span class="badge badge-flagship">Global Service &amp; Award</span>
+            <strong>担任 IPCC 第七次评估报告（AR7）第四章专家评审 &amp; ACTION 挑战赛全球 Top 50</strong>
+            <p>参与评审 IPCC AR7 区域气候风险评估中的证据与不确定性处理；团队方案在 2026 ACTION 气候—健康创新挑战赛首轮概念评选中跻身 Top 50。</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+
+    <div class="journey-panel">
+      <div class="section-header-compact">
+        <span class="section-kicker">EDUCATION &amp; METHODOLOGY</span>
+        <h2>跨学科教育背景与技术栈</h2>
+      </div>
+      <div class="mini-timeline">
+        <div class="mini-step">
+          <span class="mini-year">2023.10 – Present</span>
+          <h3>马来亚大学 (Universiti Malaya, QS 世界百强)</h3>
+          <p class="mini-role">环境保护博士候选人 (Ph.D. Candidate in Environmental Protection)</p>
+          <p>研究方向：城市高温脆弱性与早期预警、全球旱地生态水文因果发现、CMIP6 气候风险建模。导师：Chng Saun Fong &amp; Siti Hafizah Ab Hamid。</p>
+        </div>
+        <div class="mini-step">
+          <span class="mini-year">2022.02 – 2023.06</span>
+          <h3>悉尼大学 (The University of Sydney, QS 世界前 20)</h3>
+          <p class="mini-role">信息技术硕士 · 数据管理与分析 (M.IT in Data Management &amp; Analytics, WAM: 76.4)</p>
+          <p>核心课程：机器学习与数据挖掘、深度学习（PyTorch）、自然语言处理、可视分析与普适计算。毕业设计：<em>物联网网络监控仪表盘系统开发与实现</em>。</p>
+        </div>
+        <div class="mini-step">
+          <span class="mini-year">2021.12 – 2022.02</span>
+          <h3>华为技术有限公司 (Huawei Technologies Co., Ltd., 武汉)</h3>
+          <p class="mini-role">软件工程师 (Programmer)</p>
+          <p>负责代码诊断、缺陷定位与修复，参与核心算法讨论与工程质量保障。</p>
+        </div>
+        <div class="mini-step">
+          <span class="mini-year">2019.02 – 2021.12</span>
+          <h3>悉尼大学 (The University of Sydney)</h3>
+          <p class="mini-role">计算机科学理学学士 (B.Sc. in Computer Science)</p>
+          <p>核心课程：算法设计、人工智能导论、数据分析与金融数学。本科毕业论文：<em>探索可持续发展与教育之间的关联机制</em>。</p>
+        </div>
+      </div>
+
+      <div class="skill-tags-box">
+        <h3>核心计算与研究工具栈</h3>
+        <div class="skill-chip-group">
+          <span>Python / PyTorch</span>
+          <span>R / RStudio</span>
+          <span>SQL / GitHub</span>
+          <span>PCMCI / PCMCI+ / GPDC</span>
+          <span>Random Forest / SHAP</span>
+          <span>Chronological Holdout &amp; TS-CV</span>
+          <span>CMIP6 (SSP1-2.6 / SSP5-8.5)</span>
+          <span>MODIS (MOD13C2 / MCD12C1 / MCD64A1)</span>
+          <span>TerraClimate / SPEIbase / UTCI</span>
+          <span>Wavelet Coherence / Maki &amp; Hatemi-J Cointegration</span>
+          <span>C / C++ / Java / Tableau</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="home-section" aria-labelledby="selected-pub-title">
+  <div class="section-header">
+    <div>
+      <span class="section-kicker">SELECTED FIRST-AUTHOR PUBLICATIONS · 代表性一作论文</span>
+      <h2 id="selected-pub-title">精选学术发表 (Selected Publications)</h2>
+    </div>
+    <a class="text-link" href="/research/">查看全部 10 篇已发表论文与 4 篇在审手稿 →</a>
+  </div>
+  <div class="pub-list">
+    <article class="pub-item pub-featured" id="dryland-vegetation" data-pub data-first="true" data-q1="true" data-category="ecology">
+    <div class="pub-thumb-wrap">
+            <button type="button" class="pub-thumb-btn" data-lightbox-src="/assets/npj-fig1-workflow.jpg" data-lightbox-caption="Monthly hydroclimatic associations in sampled natural dryland vegetation (npj Climate and Atmospheric Science)" aria-label="放大查看论文图表：全球采样天然旱地植被的月尺度水文气候条件关联研究">
+              <img src="/assets/npj-fig1-workflow.jpg" alt="全球采样天然旱地植被的月尺度水文气候条件关联研究" loading="lazy">
+              <span class="pub-thumb-zoom"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6"/><path d="M8 11h6"/></svg> 高清图表</span>
+            </button>
+          </div>
+    <div class="pub-body">
+      <div class="pub-badges">
+        <span class="badge badge-venue">npj Climate and Atmospheric Science</span>
+        <span class="badge badge-q1">JCR Q1 · Nature Portfolio</span>
+        <span class="badge badge-first">第一作者 First Author</span>
+        <span class="badge badge-flagship">★ 代表作 Flagship</span>
+      </div>
+      <h3 class="pub-title-en" lang="en">
+        <a href="/research/npj-dryland-hydroclimate/">Monthly hydroclimatic associations in sampled natural dryland vegetation</a>
+      </h3>
+      <p class="pub-title-zh">全球采样天然旱地植被的月尺度水文气候条件关联研究</p>
+      <p class="pub-authors" lang="en"><strong class="me-author"><strong class="me-author">Li, Z.</strong>*</strong>, Chen, X., Fong, C. S., &amp; Shen, Y. (2026)</p>
+      <p class="pub-summary">基于 2001–2023 年全球 7,332 个天然旱地 0.5° 格点与 276 个月序列，运用严格滞后 PCMCI 与 PCMCI+ 条件独立性检验，揭示旱地植被绿度与水文气候关联高度集中于当月至前一个月窗口（严格滞后下 Lag-1 占 83.3%），且跨 18 项敏感性检验“时序一致性（&gt;94%）显著稳于主导指标分类”。</p>
+      <div class="pub-actions">
+        <a class="btn-chip btn-chip-primary" href="/research/npj-dryland-hydroclimate/">★ 查看代表作专题与 4 张全套图表</a>
+        
+        <button type="button" class="btn-chip" data-lightbox-src="/assets/npj-fig1-workflow.jpg" data-lightbox-caption="Monthly hydroclimatic associations in sampled natural dryland vegetation — npj Climate and Atmospheric Science"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6"/><path d="M8 11h6"/></svg> 预览论文图件</button>
+        <button type="button" class="btn-chip" data-toggle-bib="bib-dryland-vegetation" aria-expanded="false">BibTeX 引用</button>
+      </div>
+      <div class="bib-drawer" id="bib-dryland-vegetation" hidden>
+              <div class="bib-header">
+                <span>BibTeX Citation</span>
+                <button type="button" class="btn-copy-bib" data-copy-target="bib-code-dryland-vegetation"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> <span>复制 BibTeX</span></button>
+              </div>
+              <pre><code id="bib-code-dryland-vegetation">@article{li2026monthly,
+  title={Monthly hydroclimatic associations in sampled natural dryland vegetation},
+  author={Li, Zecheng and Chen, Xuanyu and Fong, Chng Saun and Shen, Yijuan},
+  journal={npj Climate and Atmospheric Science},
+  year={2026},
+  publisher={Nature Portfolio},
+  note={Accepted for publication (JCR Q1)}
+}</code></pre>
+            </div>
+    </div>
+  </article><article class="pub-item pub-featured" id="heat-early-warning" data-pub data-first="true" data-q1="true" data-category="climate-heat">
+    <div class="pub-thumb-wrap">
+            <button type="button" class="pub-thumb-btn" data-lightbox-src="/assets/jem-2026-cover.jpg" data-lightbox-caption="Machine learning early warning for urban heat risk with CMIP6 projections (Journal of Environmental Management, 413, 130304)" aria-label="放大查看论文图表：融合机器学习与 CMIP6 气候情景的城市高温风险早期预警框架">
+              <img src="/assets/jem-2026-cover.jpg" alt="融合机器学习与 CMIP6 气候情景的城市高温风险早期预警框架" loading="lazy">
+              <span class="pub-thumb-zoom"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6"/><path d="M8 11h6"/></svg> 高清图表</span>
+            </button>
+          </div>
+    <div class="pub-body">
+      <div class="pub-badges">
+        <span class="badge badge-venue">Journal of Environmental Management, 413, 130304</span>
+        <span class="badge badge-q1">JCR Q1</span>
+        <span class="badge badge-first">第一作者 First Author</span>
+        
+      </div>
+      <h3 class="pub-title-en" lang="en">
+        <a href="https://doi.org/10.1016/j.jenvman.2026.130304" target="_blank" rel="noopener">Machine learning early warning for urban heat risk with CMIP6 projections</a>
+      </h3>
+      <p class="pub-title-zh">融合机器学习与 CMIP6 气候情景的城市高温风险早期预警框架</p>
+      <p class="pub-authors" lang="en"><strong class="me-author">Li, Z.</strong>, Fong, C. S.*, Ab Hamid, S. H., Aghamohammadi, N., Sulaiman, N. M., Chen, X.-L., &amp; Song, M. (2026)</p>
+      <p class="pub-summary">构建可迁移的城市高温早期预警框架，将 2010–2020 年多种热脆弱性指数（HVI）构建方案与气温、空气质量（AQI）及滞后暴露效应耦合，并通过时间顺序留出（Holdout R² = 0.5288）与时间序列交叉验证（TS-CV R² = 0.5230）检验模型，外推 CMIP6 SSP1-2.6 与 SSP5-8.5 情景下 2025–2035 年高温死亡风险演变。</p>
+      <div class="pub-actions">
+        
+        <a class="btn-chip" href="https://doi.org/10.1016/j.jenvman.2026.130304" target="_blank" rel="noopener">DOI / 期刊原文 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></a>
+        <button type="button" class="btn-chip" data-lightbox-src="/assets/jem-2026-cover.jpg" data-lightbox-caption="Machine learning early warning for urban heat risk with CMIP6 projections — Journal of Environmental Management, 413, 130304"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6"/><path d="M8 11h6"/></svg> 预览论文图件</button>
+        <button type="button" class="btn-chip" data-toggle-bib="bib-heat-early-warning" aria-expanded="false">BibTeX 引用</button>
+      </div>
+      <div class="bib-drawer" id="bib-heat-early-warning" hidden>
+              <div class="bib-header">
+                <span>BibTeX Citation</span>
+                <button type="button" class="btn-copy-bib" data-copy-target="bib-code-heat-early-warning"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> <span>复制 BibTeX</span></button>
+              </div>
+              <pre><code id="bib-code-heat-early-warning">@article{li2026machine,
+  title={Machine learning early warning for urban heat risk with CMIP6 projections},
+  author={Li, Zecheng and Fong, Chng Saun and Ab Hamid, Siti Hafizah and Aghamohammadi, Nasrin and Sulaiman, Nik Meriam and Chen, Xue-Li and Song, Malin},
+  journal={Journal of Environmental Management},
+  volume={413},
+  pages={130304},
+  year={2026},
+  doi={10.1016/j.jenvman.2026.130304}
+}</code></pre>
+            </div>
+    </div>
+  </article><article class="pub-item pub-featured" id="heat-vulnerability" data-pub data-first="true" data-q1="true" data-category="climate-heat">
+    <div class="pub-thumb-wrap">
+            <button type="button" class="pub-thumb-btn" data-lightbox-src="/assets/scirep-2026-cover.png" data-lightbox-caption="Multi-scalar risk drivers for a heat vulnerability assessment framework using machine learning algorithms (Scientific Reports, 16, 10594)" aria-label="放大查看论文图表：基于机器学习与 SHAP 可解释归因的热带多尺度热脆弱性风险驱动框架">
+              <img src="/assets/scirep-2026-cover.png" alt="基于机器学习与 SHAP 可解释归因的热带多尺度热脆弱性风险驱动框架" loading="lazy">
+              <span class="pub-thumb-zoom"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6"/><path d="M8 11h6"/></svg> 高清图表</span>
+            </button>
+          </div>
+    <div class="pub-body">
+      <div class="pub-badges">
+        <span class="badge badge-venue">Scientific Reports, 16, 10594</span>
+        <span class="badge badge-q1">JCR Q1 · Nature Portfolio</span>
+        <span class="badge badge-first">第一作者 First Author</span>
+        
+      </div>
+      <h3 class="pub-title-en" lang="en">
+        <a href="https://doi.org/10.1038/s41598-026-44880-z" target="_blank" rel="noopener">Multi-scalar risk drivers for a heat vulnerability assessment framework using machine learning algorithms</a>
+      </h3>
+      <p class="pub-title-zh">基于机器学习与 SHAP 可解释归因的热带多尺度热脆弱性风险驱动框架</p>
+      <p class="pub-authors" lang="en"><strong class="me-author">Li, Z.</strong>, Fong, C. S., Aghamohammadi, N.*, Sulaiman, N. M., &amp; Ab Hamid, S. H.* (2026)</p>
+      <p class="pub-summary">覆盖马来西亚 13 个州与 3 个联邦直辖区（2010–2020 年），构建国家级热脆弱性指数（HVI），使用 Random Forest 与 SHAP 系统比较“局地地表物理特征”与“宏观大气环境条件（UTCI、臭氧、PM2.5）”与 HVI 耦合后对全因死亡率的预测能力（R² 达 0.8623）。</p>
+      <div class="pub-actions">
+        
+        <a class="btn-chip" href="https://doi.org/10.1038/s41598-026-44880-z" target="_blank" rel="noopener">DOI / 期刊原文 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></a>
+        <button type="button" class="btn-chip" data-lightbox-src="/assets/scirep-2026-cover.png" data-lightbox-caption="Multi-scalar risk drivers for a heat vulnerability assessment framework using machine learning algorithms — Scientific Reports, 16, 10594"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6"/><path d="M8 11h6"/></svg> 预览论文图件</button>
+        <button type="button" class="btn-chip" data-toggle-bib="bib-heat-vulnerability" aria-expanded="false">BibTeX 引用</button>
+      </div>
+      <div class="bib-drawer" id="bib-heat-vulnerability" hidden>
+              <div class="bib-header">
+                <span>BibTeX Citation</span>
+                <button type="button" class="btn-copy-bib" data-copy-target="bib-code-heat-vulnerability"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> <span>复制 BibTeX</span></button>
+              </div>
+              <pre><code id="bib-code-heat-vulnerability">@article{li2026multiscalar,
+  title={Multi-scalar risk drivers for a heat vulnerability assessment framework using machine learning algorithms},
+  author={Li, Zecheng and Fong, Chng Saun and Aghamohammadi, Nasrin and Sulaiman, Nik Meriam and Ab Hamid, Siti Hafizah},
+  journal={Scientific Reports},
+  volume={16},
+  pages={10594},
+  year={2026},
+  doi={10.1038/s41598-026-44880-z}
+}</code></pre>
+            </div>
+    </div>
+  </article><article class="pub-item " id="eu-ets-carbon-market" data-pub data-first="true" data-q1="false" data-category="carbon-finance">
+    <div class="pub-year-col"><span class="pub-year-badge">2026</span><span class="pub-index">#4</span></div>
+    <div class="pub-body">
+      <div class="pub-badges">
+        <span class="badge badge-venue">International Journal of Climate Change Strategies and Management</span>
+        <span class="badge badge-q2">JCR Q2</span>
+        <span class="badge badge-first">第一作者 First Author</span>
+        
+      </div>
+      <h3 class="pub-title-en" lang="en">
+        <a href="https://doi.org/10.1108/IJCCSM-03-2026-0168" target="_blank" rel="noopener">Climate stress, energy shocks and carbon-market connectedness in the European emissions trading system</a>
+      </h3>
+      <p class="pub-title-zh">气候压力、能源冲击与欧盟碳排放权交易体系（EU ETS）的碳市场连通性</p>
+      <p class="pub-authors" lang="en"><strong class="me-author">Li, Z.</strong>, Ab Hamid, S. H., Hou, Q., Fong, C. S., Aghamohammadi, N., &amp; Sulaiman, N. M. (2026)</p>
+      <p class="pub-summary">探究极端气候压力与能源市场冲击如何向欧盟碳排放交易体系（EU ETS）传导，量化多维风险在碳配额价格与能源系统间的动态连通性。</p>
+      <div class="pub-actions">
+        
+        <a class="btn-chip" href="https://doi.org/10.1108/IJCCSM-03-2026-0168" target="_blank" rel="noopener">DOI / 期刊原文 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg></a>
+        
+        <button type="button" class="btn-chip" data-toggle-bib="bib-eu-ets-carbon-market" aria-expanded="false">BibTeX 引用</button>
+      </div>
+      <div class="bib-drawer" id="bib-eu-ets-carbon-market" hidden>
+              <div class="bib-header">
+                <span>BibTeX Citation</span>
+                <button type="button" class="btn-copy-bib" data-copy-target="bib-code-eu-ets-carbon-market"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> <span>复制 BibTeX</span></button>
+              </div>
+              <pre><code id="bib-code-eu-ets-carbon-market">@article{li2026climate,
+  title={Climate stress, energy shocks and carbon-market connectedness in the European emissions trading system},
+  author={Li, Zecheng and Ab Hamid, Siti Hafizah and Hou, Q. and Fong, Chng Saun and Aghamohammadi, Nasrin and Sulaiman, Nik Meriam},
+  journal={International Journal of Climate Change Strategies and Management},
+  year={2026},
+  doi={10.1108/IJCCSM-03-2026-0168}
+}</code></pre>
+            </div>
+    </div>
+  </article>
+  </div>
+</section>
+
+<section class="home-section notes-section" aria-labelledby="notes-title">
+  <div class="section-header">
+    <div>
+      <span class="section-kicker">RESEARCH NOTES &amp; TECHNICAL BLOG · 科研复盘与方法笔记</span>
+      <h2 id="notes-title">研究与跨学科学习博客</h2>
+    </div>
+    <a class="text-link" href="/notes/">浏览全部博客归档 →</a>
+  </div>
+  <ul class="notes-grid">
+    <li class="note-card">
+    <div class="note-card-meta">
+      <span class="badge badge-category">代表作深读</span>
+      <time datetime="2026-11">2026-11</time>
+      <span class="note-readtime">8 min read</span>
+    </div>
+    <h3 class="note-card-title"><a href="/notes/npj-dryland-pcmci/">npj Climate and Atmospheric Science 代表作复盘：在全球 7,332 个天然旱地格点上检验水热耦合的时序边界</a></h3>
+    <p class="note-card-desc">基于 2001–2023 年（276 个月）MODIS EVI 与多源水文气候数据，通过 PCMCI/PCMCI+ 条件独立性检验与 18 项敏感性实验，证明全球天然旱地植被关联的“月度时序窗口”比“水分或蒸发需求主导分类”更稳健。</p>
+    <div class="note-card-footer">
+      <a class="text-link" href="/notes/npj-dryland-pcmci/">阅读全文 →</a>
+    </div>
+  </li><li class="note-card">
+    <div class="note-card-meta">
+      <span class="badge badge-category">气候预警与 ML</span>
+      <time datetime="2026-07">2026-07</time>
+      <span class="note-readtime">6 min read</span>
+    </div>
+    <h3 class="note-card-title"><a href="/notes/climate-ml/">从 CMIP6 气候情景到可检验的城市热风险早期预警：时间顺序留出与机器学习实践</a></h3>
+    <p class="note-card-desc">基于 Journal of Environmental Management (2026) 一作论文，探讨如何防止时间序列数据泄露、耦合滞后空气污染暴露，并将 CMIP6 情景外推转化为业务化高温风险分级工具。</p>
+    <div class="note-card-footer">
+      <a class="text-link" href="/notes/climate-ml/">阅读全文 →</a>
+    </div>
+  </li><li class="note-card">
+    <div class="note-card-meta">
+      <span class="badge badge-category">气候与公共健康</span>
+      <time datetime="2026-05">2026-05</time>
+      <span class="note-readtime">7 min read</span>
+    </div>
+    <h3 class="note-card-title"><a href="/notes/vulnerability-index/">热带多尺度热脆弱性评估框架：Random Forest + SHAP 如何连接环境暴露与全因死亡结局</a></h3>
+    <p class="note-card-desc">基于 Scientific Reports (2026) 一作论文，解析马来西亚 13 州与 3 联邦直辖区十年面板数据中，宏观大气热应力（UTCI、O3、PM2.5）与局地地表特征对死亡风险预测（R² = 0.8623）的贡献差异。</p>
+    <div class="note-card-footer">
+      <a class="text-link" href="/notes/vulnerability-index/">阅读全文 →</a>
+    </div>
+  </li><li class="note-card">
+    <div class="note-card-meta">
+      <span class="badge badge-category">科研方法与成长</span>
+      <time datetime="2026-10">2026-10</time>
+      <span class="note-readtime">6 min read</span>
+    </div>
+    <h3 class="note-card-title"><a href="/notes/reproducible-workflow/">从计算机科学到气候与地球系统科学：我的跨学科快速学习与高强度科研复现工作流</a></h3>
+    <p class="note-card-desc">回顾从悉尼大学计算机科学（B.Sc.）与数据管理分析（M.IT）、华为代码诊断工程岗位，到马来亚大学环境科学博士阶段发表 10 篇论文（7 篇一作）并担任 IPCC AR7 专家评审的方法论沉淀。</p>
+    <div class="note-card-footer">
+      <a class="text-link" href="/notes/reproducible-workflow/">阅读全文 →</a>
+    </div>
+  </li>
+  </ul>
+</section>
+</main>
+
+  <div class="lightbox" id="figure-lightbox" role="dialog" aria-modal="true" aria-label="图表高清预览" hidden>
+    <div class="lightbox-backdrop" data-close-lightbox></div>
+    <div class="lightbox-content">
+      <button type="button" class="lightbox-close" data-close-lightbox aria-label="关闭高清预览">× 关闭预览 (Esc)</button>
+      <img id="lightbox-img" src="" alt="">
+      <p id="lightbox-caption" class="lightbox-caption"></p>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div class="footer-brand">
+        <strong>李泽城 · Zecheng Li</strong>
+        <p>马来亚大学环境保护博士候选人 · 悉尼大学计算机科学学士 & 信息技术（数据分析）硕士 · IPCC AR7 第四章专家评审</p>
+      </div>
+      <div class="footer-links">
+        <a href="https://scholar.google.com/citations?user=BJvzLlcAAAAJ" target="_blank" rel="noopener">Google Scholar</a>
+        <a href="https://orcid.org/0009-0002-7197-6679" target="_blank" rel="noopener">ORCID</a>
+        <a href="https://www.scopus.com/authid/detail.uri?authorId=59641998600" target="_blank" rel="noopener">Scopus</a>
+        <a href="https://www.linkedin.com/in/zecheng-li-a7b858399/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="mailto:lizecheng3590@gmail.com">Email</a>
+        <a href="/assets/Zecheng_Li_Academic_CV.pdf" target="_blank" rel="noopener">CV (PDF)</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
